@@ -1,0 +1,163 @@
+<!Doctype html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interactive Visualisation - ICA</title>​
+
+<script src="https://d3js.org/d3.v7.min.js" charset="utf-8"></script>
+
+<style>
+    
+    #map-container{
+        width: 100vw;
+        height: 100vh;
+    }
+
+    .countryLabel{
+        display: none;   /* hide all country labels by default */
+      }
+      .countryName{
+        fill: #FFFAFF;   /* country label text colour */
+      }
+      .countryLabelBg{
+        fill: #25206b;   /* country label background colour */
+      }
+
+    /* path {
+        stroke: white;
+        stroke-width: 0.25px;
+        fill: lightblue;
+    }    */
+
+</style>
+</head>
+    <body>
+        <div id="map-container"></div>
+        
+        <script>
+
+        w = 3000;
+        h = 1250;
+
+
+        var svg = d3.select("body")
+        .select("#map-container")
+        .append("svg")
+        .attr("width", 3000)
+        // .attr("width", $("#map-container").width())
+        .attr("height", 1250)
+        .attr("style", "border:3px solid blue ");
+
+        // var projection = d3.geoMercator()
+        // .center([0, 5 ])
+        // .scale(150)
+        // .rotate([-180,0]);
+
+        // var path = d3.geoPath()
+        // .projection(projection);
+
+        var projection = d3.geoNaturalEarth1();
+
+        // Define map path
+        var path = d3
+            .geoPath()
+            .projection(projection);
+
+        var tooltip = d3.select("body")
+        .select("#map-container")
+        .append("div")
+        .style("opacity", 0)
+        .attr("class", "tooltip")
+        .style("background-color", "white")
+        .style("border", "solid")
+        .style("border-width", "2px")
+        .style("border-radius", "5px")
+        .style("padding", "5px");
+           
+        var mouseover = function(d) {
+          tooltip.style("opacity", 1)
+                d3.select(this)
+                .style("stroke", "black")
+                .style("opacity", 1);
+        }
+
+        var mousemove = function(d) {
+          tooltip
+            .html("The exact value of<br>this cell is: " + d.properties.iso_a3)
+            .style("left", (d3.mouse(this)[0]+70) + "px")
+            .style("top", (d3.mouse(this)[1]) + "px")
+        }
+        var mouseleave = function(d) {
+          tooltip
+            .style("opacity", 0)
+          d3.select(this)
+            .style("stroke", "none")
+            .style("opacity", 0.8)
+        }
+
+        d3.json("custom.geo.json")
+        .then(function(json) {
+          //Bind data and create one path per GeoJSON feature
+          countriesGroup = svg.append("g").attr("id", "map");
+          console.log(json);
+          // add a background rectangle
+        //   countriesGroup
+        //     .append("rect")
+        //     .attr("x", 0)
+        //     .attr("y", 0)
+        //     .attr("width", w)
+        //     .attr("height", h);
+        
+        //Add Sphere
+        // countriesGroup.append("path")
+        //     .attr('class', 'sphere')
+        //     .style("fill","lightblue")
+        //     .attr('d', path({type: 'Sphere'}));
+
+        countriesGroup.selectAll("path")
+            .data(json.features)
+            .enter().append("path")
+            .attr("fill", "lightgreen")
+            .attr("d", path)
+            .style("stroke", "#ffff")
+            .attr("id", function(d, i) {
+              return "country" + d.properties.iso_a3;})
+            .on("mouseover", mouseover)
+            .on("mousemove",mousemove);
+
+
+        // countriesGroup
+        // .selectAll("g")
+        // .data(json.features)
+        // .enter()
+        // .append("g")
+        // .attr("class", "countryLabel")
+        // .attr("id", function(d) {
+        //     return "countryLabel" + d.properties.iso_a3;
+        // })
+        // .attr("transform", function(d) {
+        //     return (
+        //     "translate(" + path.centroid(d)[0] + "," + path.centroid(d)[1] + ")"
+        //     );
+        // })
+        //     // add mouseover functionality to the label
+        // .on("mouseover", function(d, i) {
+        //     d3.select(this).style("display", "block");
+        // });
+        
+        
+
+        }
+      ).catch(function(error){
+        console.log(error);
+      });
+
+
+
+        
+
+
+        </script>
+    </body>
+
+</html>

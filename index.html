@@ -13,8 +13,14 @@
         height: 100vh;
     }
 
+    .country{
+        fill: #afdc7d;   /* country colour */
+        stroke: #2A2C39; /* country border colour */
+        stroke-width: 1; /* country border width */
+      }
+
     .countryLabel{
-        display: none;   /* hide all country labels by default */
+        display: none;   
       }
       .countryName{
         fill: #FFFAFF;   /* country label text colour */
@@ -22,6 +28,48 @@
       .countryLabelBg{
         fill: #25206b;   /* country label background colour */
       }
+
+      .country-on{
+        fill: #6d7e88;   /* highlight colour for selected country */
+      }
+
+      .hovernode{
+        fill:rgb(58, 200, 26);
+      }
+
+      div.tooltip {
+        position: absolute;
+        text-align: center;
+        padding: 2px;
+        font: 18px sans-serif;
+        background: white;
+        border: 0px;
+        border-radius: 8px;
+        pointer-events: none;
+      }
+
+    div.modal {
+      position: absolute;
+      text-align: center;
+            padding: 2px;
+            font: 18px sans-serif;
+            background-color: #f3ebc0;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+  /* left: 0px;
+  top: 0px;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  display: none */
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 2px;
+}
 
     /* path {
         stroke: white;
@@ -48,6 +96,10 @@
         .attr("height", 1250)
         .attr("style", "border:3px solid blue ");
 
+        var div = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
+
         // var projection = d3.geoMercator()
         // .center([0, 5 ])
         // .scale(150)
@@ -56,51 +108,47 @@
         // var path = d3.geoPath()
         // .projection(projection);
 
-        var projection = d3.geoNaturalEarth1();
+        var projection = d3.geoEquirectangular()
+        .center([0, 15]) 
+        .scale([w / (2 * Math.PI)]) 
+        .translate([w / 2, h / 2]);
 
-        // Define map path
+     
         var path = d3
             .geoPath()
             .projection(projection);
 
-        var tooltip = d3.select("body")
-        .select("#map-container")
-        .append("div")
-        .style("opacity", 0)
-        .attr("class", "tooltip")
-        .style("background-color", "white")
-        .style("border", "solid")
-        .style("border-width", "2px")
-        .style("border-radius", "5px")
-        .style("padding", "5px");
-           
-        var mouseover = function(d) {
-          tooltip.style("opacity", 1)
-                d3.select(this)
-                .style("stroke", "black")
-                .style("opacity", 1);
-        }
+        var modalDiv = d3.select("body")
+            .append("div")
+            .attr('class','modal')
+            .style("visibility", "hidden")
+            .style("position", "absolute")
+            .attr("width", 900)
+            .attr("height", 600);
 
-        var mousemove = function(d) {
-          tooltip
-            .html("The exact value of<br>this cell is: " + d.properties.iso_a3)
-            .style("left", (d3.mouse(this)[0]+70) + "px")
-            .style("top", (d3.mouse(this)[1]) + "px")
-        }
-        var mouseleave = function(d) {
-          tooltip
-            .style("opacity", 0)
-          d3.select(this)
-            .style("stroke", "none")
-            .style("opacity", 0.8)
-        }
+        var closeButton = modalDiv
+                  .append("input")
+                  .attr("type","button")
+                  .on("click", function(event,d) {
+                    d3.select("#modal").style("visibility", "hidden");
+                  });
+
+        var modal = modalDiv
+            .append("svg")
+            .attr('class','modal')
+            .attr("width", 900)
+            .attr("height", 600)
+            .style("z-index", "10")
+            // .style("visibility", "hidden");
+
+   
 
         d3.json("custom.geo.json")
         .then(function(json) {
           //Bind data and create one path per GeoJSON feature
           countriesGroup = svg.append("g").attr("id", "map");
           console.log(json);
-          // add a background rectangle
+         
         //   countriesGroup
         //     .append("rect")
         //     .attr("x", 0)
@@ -109,42 +157,132 @@
         //     .attr("height", h);
         
         //Add Sphere
-        // countriesGroup.append("path")
-        //     .attr('class', 'sphere')
-        //     .style("fill","lightblue")
-        //     .attr('d', path({type: 'Sphere'}));
+        countriesGroup.append("path")
+            .attr('class', 'sphere')
+            .style("fill","lightblue")
+            .attr('d', path({type: 'Sphere'}));
+
+          
 
         countriesGroup.selectAll("path")
             .data(json.features)
             .enter().append("path")
-            .attr("fill", "lightgreen")
+            .attr("class", "country")
             .attr("d", path)
-            .style("stroke", "#ffff")
+            .style("stroke", "black")
+            //.attr("class",function(d){ return "Country" })
+            .style("opacity", .8)
             .attr("id", function(d, i) {
               return "country" + d.properties.iso_a3;})
-            .on("mouseover", mouseover)
-            .on("mousemove",mousemove);
+            .on("mouseover", function(event,d) {
+       
+              bbox = this.getBBox();
+
+              d3.select(this).classed('hovernode', true);
+
+              div.transition()
+                .duration(200)         
+                .attr("width", function(d) {
+                  return bbox.width + 4;
+                })
+                .attr("height", function(d) {
+                  return bbox.height;
+                })
+                .style("opacity", .9);
+
+              div.html(d.properties.name + "<br/>" )
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 10) + "px");
+            })
+            .on("mouseout", function(d) {
+
+              d3.select(this).classed('hovernode', false);
+
+                div.transition()
+                  .duration(500)
+                  .style("opacity", 0);
+            })
+            .on("click", function(event,d) {
+
+              d3.select(this).classed('hovernode', false);
+              d3.selectAll(".country").classed("country-on", false);
+
+              // modalDiv
+              //     .style("visibility", "visible");
+
+                  modalDiv.transition()
+                  .duration(200)         
+                  .style("opacity", .9)
+                  .style("visibility", "visible")
+                      .style("left", (event.pageX + 10) + "px")
+                      .style("top", (event.pageY - 10) + "px");
 
 
-        // countriesGroup
-        // .selectAll("g")
-        // .data(json.features)
-        // .enter()
-        // .append("g")
-        // .attr("class", "countryLabel")
-        // .attr("id", function(d) {
-        //     return "countryLabel" + d.properties.iso_a3;
-        // })
-        // .attr("transform", function(d) {
-        //     return (
-        //     "translate(" + path.centroid(d)[0] + "," + path.centroid(d)[1] + ")"
-        //     );
-        // })
-        //     // add mouseover functionality to the label
-        // .on("mouseover", function(d, i) {
-        //     d3.select(this).style("display", "block");
-        // });
-        
+                // let modalGroup = modal.append("g");
+                // let rect = modalGroup.append("rect").attr("fill","white").attr("x","50").attr("y","50").attr("width", "500").attr("height", "300");
+
+                d3.select("#country" + d.properties.iso_a3).classed("country-on", true);
+
+                var margin = {top: 20, right: 20, bottom: 30, left: 50},
+                    width = 900 - margin.left - margin.right,
+                    height = 600 - margin.top - margin.bottom;
+
+                // parse the date / time
+                var parseTime = d3.timeParse("%d-%b-%y");
+
+                // set the ranges
+                var x = d3.scaleTime().range([0, width]);
+                var y = d3.scaleLinear().range([height, 0]);
+
+                // define the line
+                var valueline = d3.line()
+                    .x(function(d) { return x(d.date); })
+                    .y(function(d) { return y(d.close); });
+
+                // append the svg obgect to the body of the page
+                // appends a 'group' element to 'svg'
+                // moves the 'group' element to the top left margin
+                // var svg = d3.select("body").append("svg")
+                //     .attr("width", width + margin.left + margin.right)
+                //     .attr("height", height + margin.top + margin.bottom)
+                //   .append("g")
+                //     .attr("transform",
+                //           "translate(" + margin.left + "," + margin.top + ")");
+
+                // Get the data
+                d3.csv("data.csv").then(function(data) {
+
+                  // format the data
+                  data.forEach(function(d) {
+                      d.date = parseTime(d.date);
+                      d.close = +d.close;
+                  });
+
+                  // Scale the range of the data
+                  x.domain(d3.extent(data, function(d) { return d.date; }));
+                  y.domain([0, d3.max(data, function(d) { return d.close; })]);
+
+                  // Add the valueline path.
+                  modal.append("path")
+                      .data([data])
+                      .attr("class", "line")
+                      .attr("d", valueline);
+
+                  // Add the x Axis
+                  modal.append("g")
+                      .attr("transform", "translate(0," + height + ")")
+                      .call(d3.axisBottom(x));
+
+                  // Add the y Axis
+                  modal.append("g")
+                      .call(d3.axisLeft(y));
+
+                });
+
+                
+              });
+
+
         
 
         }

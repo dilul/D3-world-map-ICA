@@ -1,4 +1,4 @@
-<!Doctype html>
+<html !Doctype>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -56,14 +56,25 @@
             background-color: #f3ebc0;
             border: 0px;
             border-radius: 8px;
-            pointer-events: none;
+            /* pointer-events: none; */
+            display: none;
+         
   /* left: 0px;
   top: 0px;
   width: 100%;
   height: 100%;
   z-index: 5;
   display: none */
-}
+    }
+
+    .modal-header{
+      background-color:#009688;
+    }
+
+    .modal-close{
+      position:absolute;
+      right:0;top:0;
+    }
 
 .line {
   fill: none;
@@ -84,16 +95,15 @@
         
         <script>
 
-        w = 3000;
-        h = 1250;
+        w = 1800;
+        h = 1000;
 
 
-        var svg = d3.select("body")
-        .select("#map-container")
+        var svg = d3.select("#map-container")
         .append("svg")
-        .attr("width", 3000)
+        .attr("width", w)
         // .attr("width", $("#map-container").width())
-        .attr("height", 1250)
+        .attr("height", h)
         .attr("style", "border:3px solid blue ");
 
         var div = d3.select("body").append("div")
@@ -121,17 +131,29 @@
         var modalDiv = d3.select("body")
             .append("div")
             .attr('class','modal')
+            .attr("id","lineChart")
             .style("visibility", "hidden")
             .style("position", "absolute")
             .attr("width", 900)
             .attr("height", 600);
 
-        var closeButton = modalDiv
-                  .append("input")
+        var modalHeader = modalDiv.append("header")
+        .attr("class","modal-header");
+        modalHeader.append("h2").text("Line Chart");
+
+        var closeButton = modalHeader
+                  .append("button")
                   .attr("type","button")
+                  .attr("class","modal-close")
                   .on("click", function(event,d) {
-                    d3.select("#modal").style("visibility", "hidden");
+                    d3.select("#lineChart.modal")
+                    .style("display","none");
                   });
+
+        closeButton.append("img")
+                  .attr("src","close.png")
+                  .attr("width",50)
+                  .attr("height",25);
 
         var modal = modalDiv
             .append("svg")
@@ -147,7 +169,6 @@
         .then(function(json) {
           //Bind data and create one path per GeoJSON feature
           countriesGroup = svg.append("g").attr("id", "map");
-          console.log(json);
          
         //   countriesGroup
         //     .append("rect")
@@ -206,6 +227,8 @@
 
               d3.select(this).classed('hovernode', false);
               d3.selectAll(".country").classed("country-on", false);
+              d3.select("#lineChart.modal").style("display","block");
+
 
               // modalDiv
               //     .style("visibility", "visible");

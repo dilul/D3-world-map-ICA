@@ -1,0 +1,9 @@
+.line {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 2px;
+  }
+
+  .label{
+    font-size:20px;
+  }

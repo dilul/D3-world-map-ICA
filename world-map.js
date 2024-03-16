@@ -1,22 +1,30 @@
-const w = 3000;
-const h = 1250;
+const maxWidth = window.innerWidth * 0.9;
+const maxHeight = window.innerHeight * 0.9;
+const ratio = 0.5;
 
-const modalWidth = 1500;
-const modalHeight = 1200;
+let w = maxWidth;
+let h = maxWidth * ratio;
 
-var svg = d3
-  .select("#map-container")
-  .append("svg")
-  .attr("width", w)
-  // .attr("width", $("#map-container").width())
-  .attr("height", h)
-  .attr("style", "border:3px solid blue ");
+if (h > maxHeight) {
+  h = maxHeight;
+  w = h / ratio;
+}
 
-var div = d3
-  .select("body")
-  .append("div")
-  .attr("class", "tooltip")
-  .style("opacity", 0);
+const modalWidth = w * 0.4;
+const modalHeight = modalWidth;
+
+let modalPositionX = w / 2;
+let modalPositionY = h / 2;
+
+const studentCount = new Map();
+
+function populateStudentData() {
+  d3.json("international-student.json").then((dataSet) => {
+    dataSet.forEach(function (dataSet) {
+      studentCount.set(dataSet.country, dataSet.values);
+    });
+  });
+}
 
 // var projection = d3.geoMercator()
 // .center([0, 5 ])
@@ -28,28 +36,32 @@ var div = d3
 
 var projection = d3
   .geoEquirectangular()
-  .center([0, 15])
+  .center([0, 0])
   .scale([w / (2 * Math.PI)])
   .translate([w / 2, h / 2]);
 
 var path = d3.geoPath().projection(projection);
 
-var modalDiv = d3
-  .select("body")
-  .append("div")
-  .attr("class", "modal")
-  .attr("id", "lineChart")
-  .style("visibility", "hidden")
-  .style("position", "absolute")
-  .attr("width", modalWidth)
-  .attr("height", modalHeight);
-
 // .style("visibility", "hidden");
 
 d3.json("custom.geo.json")
   .then(function (json) {
+    const mapContainer = d3.select("#map-container");
+    const contRect = mapContainer.node().getBoundingClientRect();
+    const svg = mapContainer
+      .append("svg")
+      .attr("width", contRect.width)
+      // .attr("width", $("#map-container").width())
+      .attr("height", contRect.height);
+
+    const div = d3
+      .select("body")
+      .append("div")
+      .attr("class", "tooltip")
+      .style("opacity", 0);
+
     //Bind data and create one path per GeoJSON feature
-    countriesGroup = svg.append("g").attr("id", "map");
+    const countriesGroup = svg.append("g").attr("id", "map");
 
     //   countriesGroup
     //     .append("rect")
@@ -62,7 +74,7 @@ d3.json("custom.geo.json")
     countriesGroup
       .append("path")
       .attr("class", "sphere")
-      .style("fill", "lightblue")
+      .style("fill", "rgb(212, 240, 248)")
       .attr("d", path({ type: "Sphere" }));
 
     countriesGroup
@@ -108,42 +120,48 @@ d3.json("custom.geo.json")
         d3.select(this).classed("hovernode", false);
         d3.selectAll(".country").classed("country-on", false);
 
-        d3.select("#lineChart.modal").style("display", "block");
-
-        const modal = createModal(event, d);
-        getDataForSelectedCountry(d.properties.name, modal);
+        const modalDiv = createModalDiv(event, d);
+        const selectedCountry = [
+          d.properties.name,
+          d.properties.name_ciawf,
+          d.properties.name_long,
+          d.properties.formal_en,
+          d.properties.name_en,
+          d.properties.name_sort,
+        ];
+        buildLineChart(selectedCountry, modalDiv, event);
       });
+
+    populateStudentData();
   })
   .catch(function (error) {
     console.log(error);
   });
 
+function createModalDiv(event, d) {
+  d3.select("#lineChart.modal").remove();
 
-function createModal(event, d) {
+  var modalDiv = d3
+    .select("body")
+    .append("div")
+    .attr("class", "modal")
+    .attr("id", "lineChart")
+    .style("position", "absolute")
+    .attr("width", modalWidth)
+    .attr("height", modalHeight);
+
   var modalHeader = modalDiv
     .append("div")
     .append("header")
     .attr("class", "modal-header")
-    .attr("id","modal-header");
-
-  let modalHeading = modalHeader.append("h2").attr("class", "modal.h2");
-
-  var modal = modalDiv
-    .append("svg")
-    .attr("class", "modal")
-    .attr("id", "content")
-    .attr("width", modalWidth)
-    .attr("height", modalHeight)
-    .style("z-index", "10");
+    .attr("id", "modal-header");
 
   var closeButton = modalHeader
     .append("button")
     .attr("type", "button")
     .attr("class", "modal-close")
     .on("click", function (event, d) {
-      d3.select("#content").remove();
-      d3.select("#modal-header").remove();
-      d3.select("#lineChart.modal").style("display", "none");
+      modalDiv.remove();
     });
 
   closeButton
@@ -152,31 +170,18 @@ function createModal(event, d) {
     .attr("width", 72)
     .attr("height", 63);
 
-  modalDiv
-    .transition()
-    .duration(200)
-    .style("opacity", 0.9)
-    .style("visibility", "visible")
-    .style("left", event.pageX + 10 + "px")
-    .style("top", event.pageY - 10 + "px");
-
   //Add modal header
+  let modalHeading = modalHeader.append("h2").attr("class", "modal.h2");
   modalHeading.text("International Students Trend of " + d.properties.name);
 
-  return modal;
+  modalDiv
+    .style("left", modalPositionX + "px")
+    .style("top", modalPositionY + "px");
+
+  return modalDiv;
 }
 
-
-function getDataForSelectedCountry(selectedCountry, modal) {
-  console.log(selectedCountry);
-
-  //  d3.json("Births_2017.json").then(buildChart);
-  d3.json("convertcsv updated.json").then((dataSet) =>
-    buildLineChart(dataSet, selectedCountry, modal)
-  );
-}
-
-function buildLineChart(dataSet, selectedCountry, modal) {
+function buildLineChart(selectedCountry, modalDiv, event) {
   let dataSetY = [];
   let yMax = [];
 
@@ -185,19 +190,24 @@ function buildLineChart(dataSet, selectedCountry, modal) {
     graphWidth = modalWidth - margin.left - margin.right,
     graphHeight = modalHeight - margin.top - margin.bottom;
 
-  console.log(selectedCountry);
-  const studentCount = new Map();
-
-  dataSet.forEach(function (dataSet) {
-    studentCount.set(dataSet.country, dataSet.values);
-  });
+  let available = false;
+  let countryData;
+  for (let i = 0; i < selectedCountry.length && !available; i++) {
+    if (studentCount.has(selectedCountry[i])) {
+      available = true;
+      countryData = studentCount.get(selectedCountry[i]);
+    }
+  }
 
   //Check whether the selected Country data is available
-  if (studentCount.has(selectedCountry)) {
-    //Get the data related to the selected Country
-    const countryData = studentCount.get(selectedCountry);
+  if (available) {
+    // modalPositionX = event.pageX + modalWidth > w ? event.pageX - modalWidth : event.pageX
+    // modalPositionY = event.pageY + modalHeight > h ? event.pageY - modalHeight : event.pageY
+    modalPositionX = w / 2 - modalWidth / 2;
+    modalPositionY = h / 2 - modalHeight / 2;
 
-    console.log(countryData);
+    //Get the data related to the selected Country
+    // const countryData = studentCount.get(country);
 
     countryData.forEach(function (d) {
       dataSetY.push(d.year);
@@ -222,6 +232,14 @@ function buildLineChart(dataSet, selectedCountry, modal) {
     const xAxis = d3.axisBottom(xScale).ticks(10).tickFormat(d3.format("d"));
 
     const yAxis = d3.axisLeft(yScale);
+
+    var modal = modalDiv
+      .append("svg")
+      .attr("class", "modal")
+      .attr("id", "content")
+      .attr("width", modalWidth)
+      .attr("height", modalHeight)
+      .style("z-index", "10");
 
     const graphGroup = modal
       .append("g")
@@ -252,25 +270,6 @@ function buildLineChart(dataSet, selectedCountry, modal) {
 
     const colourScale = d3.scaleOrdinal(d3.schemeCategory10);
 
-    // const lines =
-    // graphGroup
-    //     .selectAll('path.line')
-    //     .data(countryData)
-    //     .enter()
-    //         .append("path")
-    //             // .attr('id', )
-    //             .attr('class', 'line')
-    //             .attr('stroke', function(d, colIndex) {return colourScale(colIndex) })
-    //             .attr('stroke-width', 2)
-    //             .style("fill", "none")
-    //             .style('opacity', 0.5)
-    //             .attr('d',
-    //                 d3.line()//.curve(d3.curveNatural)
-    //                     .x([1300,1500,1400])
-    //                     .y([1400,1300,2000])
-
-    //                 );
-
     graphGroup
       .append("path")
       .datum(countryData)
@@ -288,9 +287,67 @@ function buildLineChart(dataSet, selectedCountry, modal) {
             return yScale(d.count);
           })
       );
-  }
-}
 
+    // add the dots with tooltips
+
+    var lineDiv = d3
+      .select("body")
+      .append("div")
+      .attr("class", "lineTooltip")
+      .style("opacity", 0);
+
+    graphGroup
+      .selectAll("dot")
+      .data(countryData)
+      .enter()
+      .append("circle")
+      .attr("r", 3)
+      .attr("cx", function (d) {
+        return xScale(d.year);
+      })
+      .attr("cy", function (d) {
+        return yScale(d.count);
+      })
+      .on("mouseover", function (event, d) {
+      
+        bbox = this.getBBox;
+        lineDiv
+          .transition()
+          .duration(200)
+          .attr("width", function (d) {
+            return bbox.width + 4;
+          })
+          .attr("height", function (d) {
+            return bbox.height;
+          })
+          .style("opacity", 0.9);
+        lineDiv
+          .html(selectedCountry[0] + ": year " + d.year + "<br/>" + "Student count :" + d.count)
+          .style("left", event.pageX + "px")
+          .style("top", event.pageY - 28 + "px");
+      })
+      .on("mouseout", function (d) {
+        lineDiv.transition().duration(500).style("opacity", 0);
+      });
+
+  } else {
+    modalDiv.append("div").append("h4").html("Data is not available");
+    const modalDivRect = modalDiv.node().getBoundingClientRect();
+    modalPositionX = w / 2 - modalDivRect.width / 2;
+    modalPositionY = h / 2 - modalDivRect.height / 2;
+  }
+
+  modalPositionX = modalPositionX < 0 ? 10 : modalPositionX;
+  modalPositionY = modalPositionY < 0 ? 10 : modalPositionY;
+
+  modalDiv
+    .transition()
+    .duration(200)
+    .style("opacity", 0.96)
+    .style("visibility", "visible")
+    .style("left", modalPositionX + "px")
+    .style("top", modalPositionY + "px");
+}
 
 function convertDataset(dataset) {
   const dataMap = d3.map(dataSet, (value) => {

@@ -5,16 +5,17 @@
   }
 
   .label{
-    font-size:15px;
+    font-size:13px;
   }
 
   div.lineTooltip {
     position: absolute;
     text-align: center;
     padding: 2px;
+    border: 1px solid #16171d;
     font: 12px sans-serif;
-    background: lightsteelblue;
-    border: 0px;
+    color: white;
+    background: rgb(23, 53, 92);
     border-radius: 8px;
     pointer-events: none;
   }

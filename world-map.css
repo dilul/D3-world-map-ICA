@@ -5,7 +5,7 @@
 }
 
 .country {
-  fill: #92e472;
+  /* fill: #8995d6; */
   stroke: #2a2c39;
   stroke-width: 1;
 }
@@ -25,16 +25,17 @@
 }
 
 .hovernode {
-  fill: rgb(46, 119, 29);
+  fill: #d837c0;
 }
 
 div.tooltip {
   position: absolute;
   text-align: center;
   padding: 1px;
-  font: 20px sans-serif;
-  background: rgb(249, 252, 250);
-  border: 0px;
+  font: 15px sans-serif;
+  color: white;
+  background: rgb(0, 0, 0);
+  border: 1px solid #16171d;
   border-radius: 8px;
   pointer-events: none;
 }
@@ -43,34 +44,39 @@ div.modal {
   position: absolute;
   text-align: center;
   padding: 2px;
-  font: 18px sans-serif;
-  background-color: #e0ded1;
-  border: 1px;
-  border-radius: 8px;
-  border-color: darkgreen;
-  /* pointer-events: none; */
-  /*display: none;*/
-
-  /* left: 0px;
-top: 0px;
-width: 100%;
-height: 100%;
-z-index: 5;
-display: none */
+  font: 15px sans-serif;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #16171d;
+  box-shadow: 2px 2px 8px 8px #53535c;
+  border-radius: 3px;
 }
 
 .modal-header {
-  background-color: #85e88b;
-  justify-content: center;
+  background-color: #6198c6;
+  justify-content: left;
   display: flex;
+  height:25px;
 }
 
-.modal.h2{
+.modal-h5{
+  margin-block-start: 0.5em;
+  margin-block-end: 0.5em;
+  margin-inline-start: 8px;
   display: inline-block;
+  
 }
 
 .modal-close {
+  padding: 2px;
   position: absolute;
   right: 0;
   top: 0;
+}
+
+.modal-close-hover{
+  border: 2px solid #0c0f64;
+  overflow:hidden;  
+
 }

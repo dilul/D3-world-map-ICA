@@ -16,12 +16,19 @@ const modalHeight = modalWidth;
 let modalPositionX = w / 2;
 let modalPositionY = h / 2;
 
+let totalStudent;
+
 const studentCount = new Map();
 
 const colorScale = d3
   .scaleThreshold()
-  .domain([1000, 2000, 3000, 4000, 5000, 6000, 7000])
-  .range(d3.schemeBlues[7]);
+  .domain([0,100,1000,4000, 8000, 12000, 16000, 20000, 24000, 28000, 32000, 36000])
+  .range(d3.schemeOranges[9]);
+
+
+populateStudentData();
+buildChoreplethMap();
+
 
 function populateStudentData() {
   d3.json("international-student.json").then((dataSet) => {
@@ -41,130 +48,128 @@ function populateStudentData() {
 // .scale(150)
 // .rotate([-180,0]);
 
-var projection = d3
-  .geoEquirectangular()
-  .center([0, 0])
-  .scale([w / (2 * Math.PI)])
-  .translate([w / 2, h / 2]);
+function buildChoreplethMap() {
 
-var path = d3.geoPath().projection(projection);
+  var projection = d3
+    .geoEquirectangular()
+    .center([0, 0])
+    .scale([w / (2 * Math.PI)])
+    .translate([w / 2, h / 2]);
 
-// .style("visibility", "hidden");
-populateStudentData();
+  var path = d3.geoPath().projection(projection);
 
-d3.json("custom.geo.json")
-  .then(function (json) {
-    const mapContainer = d3.select("#map-container");
-    const contRect = mapContainer.node().getBoundingClientRect();
-    const svg = mapContainer
-      .append("svg")
-      .attr("width", contRect.width)
-      .attr("height", contRect.height);
+  d3.json("custom.geo.json")
+    .then(function (json) {
+      const mapContainer = d3.select("#map-container");
+      const contRect = mapContainer.node().getBoundingClientRect();
+      const svg = mapContainer
+        .append("svg")
+        .attr("width", contRect.width)
+        .attr("height", maxHeight);
 
-    const div = d3
-      .select("body")
-      .append("div")
-      .attr("class", "tooltip")
-      .style("opacity", 0);
+      const div = d3
+        .select("body")
+        .append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
 
-    //Bind data and create one path per GeoJSON feature
-    const countriesGroup = svg.append("g").attr("id", "map");
+      //Bind data and create one path per GeoJSON feature
+      const countriesGroup = svg.append("g").attr("id", "map");
 
-    //   countriesGroup
-    //     .append("rect")
-    //     .attr("x", 0)
-    //     .attr("y", 0)
-    //     .attr("width", w)
-    //     .attr("height", h);
+      //Add Sphere
+      countriesGroup
+        .append("path")
+        .attr("class", "sphere")
+        .style("fill", "white")
+        .attr("d", path({ type: "Sphere" }));
 
-    //Add Sphere
-    countriesGroup
-      .append("path")
-      .attr("class", "sphere")
-      .style("fill", "white")
-      .attr("d", path({ type: "Sphere" }));
+      countriesGroup
+        .selectAll("path")
+        .data(json.features)
+        .enter()
+        .append("path")
+        .attr("class", "country")
+        .attr("d", path)
+        .style("stroke", "black")
+        .attr("fill", getColourMap)
+        //.attr("class",function(d){ return "Country" })
+        .style("opacity", 0.8)
+        .attr("id", function (d, i) {
+          return "country" + d.properties.iso_a3;
+        })
+        .on("mouseover", function (event, d) {
+          bbox = this.getBBox();
 
-    countriesGroup
-      .selectAll("path")
-      .data(json.features)
-      .enter()
-      .append("path")
-      .attr("class", "country")
-      .attr("d", path)
-      .style("stroke", "black")
-      .attr("fill", function (d) {
-        //****Apply blue colour scale according to the total students**
-        const countryData = getCountryStudentDataFromMap(d);
-        let total;
+          d3.select(this).classed("hovernode", true);
 
-        if (countryData) {
-          total = countryData.total;
-        } else {
-          total = 0;
-        }
+          div
+            .transition()
+            .duration(200)
+            .attr("width", function (d) {
+              return bbox.width + 4;
+            })
+            .attr("height", function (d) {
+              return bbox.height;
+            })
+            .style("opacity", 0.9);
 
-        return colorScale(total);
-      })
-      //.attr("class",function(d){ return "Country" })
-      .style("opacity", 0.8)
-      .attr("id", function (d, i) {
-        return "country" + d.properties.iso_a3;
-      })
-      .on("mouseover", function (event, d) {
-        bbox = this.getBBox();
+          div
+            .html(d.properties.name + "<br/>" + "Total Student Count : "+ totalStudent +"<br/>")
+            .style("left", event.pageX + 10 + "px")
+            .style("top", event.pageY - 10 + "px");
+        })
+        .on("mouseout", function (d) {
+          d3.select(this).classed("hovernode", false);
 
-        d3.select(this).classed("hovernode", true);
+          div.transition().duration(500).style("opacity", 0);
+        })
+        .on("click", function (event, d) {
+          d3.select(this).classed("hovernode", false);
+          d3.selectAll(".country").classed("country-on", false);
 
-        div
-          .transition()
-          .duration(200)
-          .attr("width", function (d) {
-            return bbox.width + 4;
-          })
-          .attr("height", function (d) {
-            return bbox.height;
-          })
-          .style("opacity", 0.9);
+          const modalDiv = createModalDiv(event, d);
 
-        div
-          .html(d.properties.name + "<br/>")
-          .style("left", event.pageX + 10 + "px")
-          .style("top", event.pageY - 10 + "px");
-      })
-      .on("mouseout", function (d) {
-        d3.select(this).classed("hovernode", false);
+          const selectedCountry = getCountryStudentDataFromMap(d);
+          buildLineChart(selectedCountry, modalDiv, event);
+        });
 
-        div.transition().duration(500).style("opacity", 0);
-      })
-      .on("click", function (event, d) {
-        d3.select(this).classed("hovernode", false);
-        d3.selectAll(".country").classed("country-on", false);
+      // set legend
+      svg
+        .append("g")
+        .attr("class", "legendLimits")
+        .attr("transform", "translate(" + w + 100 + " ,200)");
 
-        const modalDiv = createModalDiv(event, d);
+      // const legend = d3
+      //   .legendColor()
+      //   .labelFormat(d3.format(",.0f"))
+      //   .labels(d3.legendHelpers.thresholdLabels)
+      //   .labelOffset(3)
+      //   .shapePadding(0)
+      //   .scale(colorScale);
 
-        const selectedCountry = getCountryStudentDataFromMap(d);
-        buildLineChart(selectedCountry, modalDiv, event);
-      });
+      // svg.select(".legendLimits").call(legend);
 
-    // set legend
-    svg
-      .append("g")
-      .attr("class", "legendLimits")
-      .attr("transform", "translate(" + w + 100 + " ,200)");
 
-    const legend = d3
-      .legendColor()
-      .labelFormat(d3.format(",.0f"))
-      .labels(d3.legendHelpers.thresholdLabels)
-      .labelOffset(3)
-      .shapePadding(0)
-      .scale(colorScale);
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+}
 
-    svg.select(".legendLimits").call(legend);
-  })
-  .catch(function (error) {
-    console.log(error);
-  });
+function getColourMap(country){
+          
+    //****Apply blue colour scale according to the total students**
+    const countryData = getCountryStudentDataFromMap(country);
+    
+    if (countryData) {
+      totalStudent = countryData.total;
+    } else {
+      totalStudent = 0;
+    }
+
+    return colorScale(totalStudent);
+  
+}
 
 function getCountryStudentDataFromMap(d) {
   const selectedCountry = [
@@ -267,7 +272,8 @@ function buildLineChart(selectedCountry, modalDiv, event) {
     //set min y value as zero
     const yScale = d3
       .scaleLinear()
-      .domain([d3.min(yMax) - 100, d3.max(yMax)])
+      // .domain([d3.min(yMax) - 100, d3.max(yMax)])
+      .domain([0, d3.max(yMax)])
       .range([graphHeight, 0]);
 
     //****BUILD THE AXES****
@@ -317,8 +323,9 @@ function buildLineChart(selectedCountry, modalDiv, event) {
       .append("path")
       .datum(selectedCountry.values)
       .attr("fill", "none")
-      .attr("stroke", colourScale)
-      .attr("stroke-width", 1.5)
+      .attr("class","line")
+      // .attr("stroke", colourScale)
+      // .attr("stroke-width", 1.5)
       .attr(
         "d",
         d3

@@ -1,6 +1,8 @@
 #map-container {
-  width: 100vw;
-  height: 100vh;
+  width: 90vw;
+  height: 90vh;
+  margin-left: 100px;
+  /* border: 5px solid red; */
 
 }
 
@@ -25,7 +27,7 @@
 }
 
 .hovernode {
-  fill: #d837c0;
+  fill: #eae693;
 }
 
 div.tooltip {
@@ -54,7 +56,7 @@ div.modal {
 }
 
 .modal-header {
-  background-color: #6198c6;
+  background-color: #DAA06D;
   justify-content: left;
   display: flex;
   height:25px;
@@ -78,5 +80,16 @@ div.modal {
 .modal-close-hover{
   border: 2px solid #0c0f64;
   overflow:hidden;  
+
+}
+
+.title h2{
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700; color:#202020;
+  /* text-transform: uppercase; */
+  word-spacing: 1px; letter-spacing:2px;
+  margin-block-start: 0.1em;
+  margin-block-end: 0.1em;
 
 }

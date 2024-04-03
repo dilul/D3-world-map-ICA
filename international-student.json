@@ -182,7 +182,7 @@
     ]
   },
   {
-    "country": "Bahama Islands, The",
+    "country": "Bahamas",
     "values": [
       { "year": 2015, "count": 445 },
       { "year": 2016, "count": 685 },
@@ -546,7 +546,7 @@
     ]
   },
   {
-    "country": "China, People's Republic of",
+    "country": "China",
     "values": [
       { "year": 2015, "count": 68350 },
       { "year": 2016, "count": 80525 },
@@ -756,7 +756,7 @@
     ]
   },
   {
-    "country": "East Timor, Democratic Republic of",
+    "country": "Timor-Leste",
     "values": [
       { "year": 2015, "count": 0 },
       { "year": 2016, "count": 0 },
@@ -1148,7 +1148,7 @@
     ]
   },
   {
-    "country": "Hong Kong SAR",
+    "country": "Hong Kong",
     "values": [
       { "year": 2015, "count": 2180 },
       { "year": 2016, "count": 2495 },
@@ -1204,7 +1204,7 @@
     ]
   },
   {
-    "country": "Indonesia, Republic of",
+    "country": "Indonesia",
     "values": [
       { "year": 2015, "count": 775 },
       { "year": 2016, "count": 840 },
@@ -1372,7 +1372,7 @@
     ]
   },
   {
-    "country": "Korea, People's Democratic Republic of",
+    "country": "North Korea",
     "values": [
       { "year": 2015, "count": 0 },
       { "year": 2016, "count": 0 },
@@ -1386,7 +1386,7 @@
     ]
   },
   {
-    "country": "Korea, Republic of",
+    "country": "South Korea",
     "values": [
       { "year": 2015, "count": 15870 },
       { "year": 2016, "count": 17230 },
@@ -1568,7 +1568,7 @@
     ]
   },
   {
-    "country": "Macau SAR",
+    "country": "Macau",
     "values": [
       { "year": 2015, "count": 195 },
       { "year": 2016, "count": 195 },
@@ -1792,7 +1792,7 @@
     ]
   },
   {
-    "country": "Mongolia, People's Republic of",
+    "country": "Mongolia",
     "values": [
       { "year": 2015, "count": 120 },
       { "year": 2016, "count": 165 },
@@ -1848,7 +1848,7 @@
     ]
   },
   {
-    "country": "Myanmar (Burma)",
+    "country": "Myanmar",
     "values": [
       { "year": 2015, "count": 25 },
       { "year": 2016, "count": 25 },
@@ -2058,7 +2058,7 @@
     ]
   },
   {
-    "country": "Palestinian Authority (Gaza/West Bank)",
+    "country": "Palestine West Bank and Gaza",
     "values": [
       { "year": 2015, "count": 85 },
       { "year": 2016, "count": 120 },
@@ -2072,7 +2072,7 @@
     ]
   },
   {
-    "country": "Panama, Republic of",
+    "country": "Panama",
     "values": [
       { "year": 2015, "count": 110 },
       { "year": 2016, "count": 115 },
@@ -2464,7 +2464,7 @@
     ]
   },
   {
-    "country": "South Sudan, Republic of",
+    "country": "South Sudan",
     "values": [
       { "year": 2015, "count": 0 },
       { "year": 2016, "count": 5 },
@@ -2506,7 +2506,7 @@
     ]
   },
   {
-    "country": "St. Kitts-Nevis",
+    "country": "St. Kitts and Nevis",
     "values": [
       { "year": 2015, "count": 35 },
       { "year": 2016, "count": 35 },
@@ -2576,7 +2576,7 @@
     ]
   },
   {
-    "country": "Surinam",
+    "country": "Suriname",
     "values": [
       { "year": 2015, "count": 10 },
       { "year": 2016, "count": 10 },
@@ -2674,7 +2674,7 @@
     ]
   },
   {
-    "country": "Tanzania, United Republic of",
+    "country": "United Republic of Tanzania",
     "values": [
       { "year": 2015, "count": 315 },
       { "year": 2016, "count": 375 },
@@ -2730,7 +2730,7 @@
     ]
   },
   {
-    "country": "Trinidad and Tobago, Republic of",
+    "country": "Trinidad and Tobago",
     "values": [
       { "year": 2015, "count": 220 },
       { "year": 2016, "count": 230 },
@@ -2968,7 +2968,7 @@
     ]
   },
   {
-    "country": "Virgin Islands, British",
+    "country": "British Virgin Islands",
     "values": [
       { "year": 2015, "count": 0 },
       { "year": 2016, "count": 0 },

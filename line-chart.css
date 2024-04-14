@@ -1,14 +1,20 @@
-.line {
-    fill: none;
+.primary-line {
     stroke: #C04000;
+    fill: none;
     stroke-width: 2px;
-  }
+}
 
-  .label{
-    font-size:13px;
-  }
+.secondary-line {
+    stroke: #2b4909;
+    fill: none;
+    stroke-width: 2px;
+}
 
-  div.lineTooltip {
+.label {
+    font-size: 13px;
+}
+
+div.lineTooltip {
     position: absolute;
     text-align: center;
     padding: 2px;
@@ -18,4 +24,12 @@
     background: rgb(23, 53, 92);
     border-radius: 8px;
     pointer-events: none;
-  }
+}
+
+#dropdown_container {
+    width: 50%;
+}
+
+.selection {
+    width: 50%;
+}

@@ -17,16 +17,38 @@ let modalPositionX = w / 2;
 let modalPositionY = h / 2;
 
 const studentData = new Map();
+const colourScaleData = new Map();
+const colourMap = new Map([
+  [0, "#ffff"],
+  [100, "#fff5eb"],
+  [1000, "#fee8d3"],
+  [4000,"fdd8b3"],
+  [8000,"#fdc28c"],
+  [12000,"#fda762"],
+  [16000,"#fb8d3d"],
+  [20000, "#f2701d"],
+  [24000,"#e25609"],
+  [28000,"#c44103"],
+  [32000,"#9f3303"],
+  [36000,"#7f2704"]
+]);
 
 const colorScale = d3
   .scaleThreshold()
-  .domain([0, 100, 1000, 4000, 8000, 12000, 16000, 20000, 24000, 28000, 32000, 36000])
-  .range(d3.schemeOranges[9]);
+ // .domain([12])
+ //.domain([0, 100, 1000, 4000, 8000, 12000, 16000, 20000, 24000]).range(d3.schemeOranges[9]);
+ .domain(colourMap.keys()).range(colourMap.values());
+  // .domain([0, 100, 1000, 4000, 8000, 12000, 16000, 20000, 24000, 28000, 32000, 36000])
+  // .range(["#ffff","#fff5eb","#fee8d3","#fdd8b3","#fdc28c","#fda762","#fb8d3d","#f2701d","#e25609","#c44103","#9f3303","#7f2704"]);
 
 
 populateStudentDataAndBuildMap();
 
 
+/*===================================
+  Populate student data
+ ====================================
+*/
 function populateStudentDataAndBuildMap() {
   d3.json("international-student.json").then((dataSet) => {
     dataSet.forEach(function (dataSet) {
@@ -46,6 +68,10 @@ function populateStudentDataAndBuildMap() {
 // .scale(150)
 // .rotate([-180,0]);
 
+/*===============================================
+   This method build Chorepleth Map
+  ===============================================
+*/
 function buildChoreplethMap() {
 
   const projection = d3
@@ -56,6 +82,7 @@ function buildChoreplethMap() {
 
   const path = d3.geoPath().projection(projection);
 
+  //Read country data from json file
   d3.json("custom.geo.json")
     .then(function (json) {
       const mapContainer = d3.select("#map-container");
@@ -65,7 +92,7 @@ function buildChoreplethMap() {
         .attr("width", contRect.width)
         .attr("height", maxHeight);
 
-      const div = d3
+      const mapTooltip = d3
         .select("body")
         .append("div")
         .attr("class", "tooltip")
@@ -93,17 +120,25 @@ function buildChoreplethMap() {
         //.attr("class",function(d){ return "Country" })
         .style("opacity", 0.8)
         .attr("id", function (d, i) {
-          return "country" + d.properties.iso_a3;
+         // console.log(d.properties.iso_a3)
+          console.log(d.properties.name)
+
+          return "country" + d.properties.name;
         })
         .on("mouseover", function (event, d) {
           const bbox = this.getBBox();
 
+          /*
+            Get student data related to the mouse pointed country 
+          */
           const hoverCountry = getCountryStudentDataFromMap(d);
           const total = hoverCountry?.total || 0;
 
+          //Change the hovered country colour
           d3.select(this).classed("hovernode", true);
 
-          div
+          //Set tooltip size
+          mapTooltip
             .transition()
             .duration(200)
             .attr("width", function (d) {
@@ -114,32 +149,114 @@ function buildChoreplethMap() {
             })
             .style("opacity", 0.9);
 
-          div
+            //Set the tooltip text and the style
+            mapTooltip
             .html(d.properties.name + "<br/>" + "Total Student Count : " + total + "<br/>")
             .style("left", event.pageX + 10 + "px")
             .style("top", event.pageY - 10 + "px");
         })
         .on("mouseout", function (d) {
+
+          //Change back the country node colour when mouse move out
           d3.select(this).classed("hovernode", false);
 
-          div.transition().duration(500).style("opacity", 0);
+          mapTooltip.transition().duration(500).style("opacity", 0);
         })
         .on("click", function (event, d) {
           d3.select(this).classed("hovernode", false);
           d3.selectAll(".country").classed("country-on", false);
 
+          //Create modal when click on a country
           const modalDiv = createModalDiv(event, d);
 
+          //Get selected country related student data
           const selectedCountry = getCountryStudentDataFromMap(d);
+
+          //Call line chart building method
           buildLineChart(selectedCountry, modalDiv, event);
+
+          // var zoom = d3.zoom()
+          // .scaleExtent([1, 8])
+          // .on('zoom', function (event) {
+          //   mapContainer.selectAll('path')
+          //     .attr('transform', event.transform);
+          // });
+
+          // mapContainer.call(zoom);
         });
 
       // set legend
-      svg
+      const legendGroup = svg
         .append("g")
-        .attr("class", "legendLimits")
-        .attr("transform", "translate(" + w + 100 + " ,200)");
+        .attr("class", "legendGroup")
+        .attr('width', 148)
+        //and 148px high
+        .attr('height', 148)
+        //then either select all the 'g's inside the svg
+        //or create placeholders
+        .selectAll('g')
+        //Fill the data into our placeholders in reverse order
+        //This arranges our legend in descending order.
+        //The 'data' here is the items we entered in the 'domain',
+        //in this case [min, max]
+        //We use 'slice()' to create a shallow copy of the array
+        //Since we don't want to modify the original one
+        .data(colorScale.domain().slice().reverse())
+        //Every node in teh data should have a 'g' appended
+        .enter().append('g')
+        // "translate(" + w + 100 + " ,200)"
+        .attr("transform", function(d, i) { return "translate("+(w+20)+"," + i * 20 + ")"; });
+      
+      const legend  = legendGroup.append("rect")
+                // .datum(json.features)
+                // .attr('x', function(d,i) { return d*i; })
+      //.attr('y', 120)
+      .attr('width', 40)
+      .attr('height', 25)
+      .attr('stroke', 'black')
+      .attr('fill', colorScale)
+      .on("click",function(event,d){
+      
+       // console.log(studentData);
+        // for (let countryObj of studentData.values().map()) {
+        //   countryObj?.total
+        // }
+        const mapedColour = colourMap.get(d);
+        const mappedCountry = colourScaleData.get(mapedColour);
 
+        currentOpacity = d3.selectAll("#country"+mappedCountry).node().getBoundingClientRect();
+        console.log(currentOpacity.style);
+        console.log(currentOpacity);
+        //console.log(currentOpacity.style("opacity"));
+        d3.selectAll("country"+mappedCountry).style("opacity", currentOpacity == 0.8 ? 1:0);
+
+      });
+
+      legendGroup.append("text")
+    .attr("x", 50)
+    .attr("y", 9)
+    .attr("dy", ".35em")
+    .text(function(d) { return d});
+
+      //           .selectAll('circle')
+      //           .data(studentData)
+      //           .enter()
+      //           .append('circle')
+      //               .attr("cy", function(d, i) {return i*20})
+      //               .attr("r", 5)
+      //               .style("fill", getColourMap);
+
+      // const legendText  = legendGroup
+      //                 .selectAll('text')
+      //                 .data(studentData)
+      //                 .enter()
+      //                 .append("text")  
+      //                     .attr("x", 30) 
+      //                     .attr("y", function(d, i) {return i*20})               
+      //                     .attr("dy", ".35em") // 1em is the font size so 0.35em is 35% of the font size. This attribute offsets the y position by this amount.
+      //                     .attr("text-anchor", "start")
+      //                     .style("fill", getColourMap)
+      //                     .text(function(d){return d});
       // const legend = d3
       //   .legendColor()
       //   .labelFormat(d3.format(",.0f"))
@@ -157,15 +274,31 @@ function buildChoreplethMap() {
     });
 }
 
+/**
+ * This method returns the colour scale for the map according to the total students
+ * 
+ */
 function getColourMap(country) {
   //****Apply red colour scale according to the total students**
   const countryData = getCountryStudentDataFromMap(country);
+  // console.log(countryData?.country);
+  // if( countryData.country=="Canada"){
+  //   return "#0000";
+  // }
+  const colour = colorScale(countryData?.total || 0);
 
-  return colorScale(countryData?.total || 0);
+  colourScaleData.set(countryData?.name,colour);
+  console.log(colourScaleData.get("India"));
+  return colour;
 
 }
 
+/*
+  This method returns the country related data
+*/
 function getCountryStudentDataFromMap(d) {
+
+  //selected country name is check against various map data as there are name differences in both data files
   const selectedCountry = [
     d.properties.name,
     d.properties.name_ciawf,
@@ -182,9 +315,14 @@ function getCountryStudentDataFromMap(d) {
   }
 }
 
+/**
+ * This method create the modal to display the line chart
+ * 
+ */
 function createModalDiv(event, d) {
   d3.select("#lineChart.modal").remove();
 
+  //Append modal div container to body
   const modalDiv = d3
     .select("body")
     .append("div")
@@ -194,12 +332,14 @@ function createModalDiv(event, d) {
     .style("width", modalWidth);
   //.attr("height", modalHeight);
 
+  //Append a modal header
   const modalHeader = modalDiv
     .append("div")
     .append("header")
     .attr("class", "modal-header")
     .attr("id", "modal-header");
 
+  //Append a span to include a close button for the modal
   const closeButton = modalHeader
     .append("span")
     .attr("class", "modal-close")
@@ -207,6 +347,7 @@ function createModalDiv(event, d) {
       modalDiv.remove();
     });
 
+  //Append a close icon image to the span
   closeButton
     .append("img")
     .attr("src", "icons8-close-window-30.png")
@@ -219,7 +360,7 @@ function createModalDiv(event, d) {
       d3.select(this).classed("modal-close-hover", false);
     });
 
-  //Add modal header
+  //Add modal header text
   const modalHeading = modalHeader.append("h5").attr("class", "modal-h5");
   modalHeading.text("International Students Trend of " + d.properties.name);
 
@@ -230,9 +371,17 @@ function createModalDiv(event, d) {
   return modalDiv;
 }
 
+/*==========================================================================
+    The code blocks in the below are related to line chart
+
+  ===========================================================================
+*/
+
+/*
+  This method build the line chart axes
+*/
 function buildLineChartAxes(graphGroup, graphHeight, xScale, yScale) {
 
-  //format years as date
   const xAxisData = d3.axisBottom(xScale).ticks(10).tickFormat(d3.format("d"));
 
   const yAxisData = d3.axisLeft(yScale).ticks(12);
@@ -262,6 +411,9 @@ function buildLineChartAxes(graphGroup, graphHeight, xScale, yScale) {
   return {xAxis, yAxis}
 }
 
+/*
+  This method update the line chart axes when second line is drawn
+*/
 function updateLineChartAxes(axes, graphHeight, xScale, yScale) {
   const yAxisData = d3.axisLeft(yScale).ticks(12);
 
@@ -278,6 +430,9 @@ function buildLineChartGraphGroup(modal, margin, id) {
     .attr("id", `graph-group-${id}`);
 }
 
+/**
+ * This method draw the line in the line chart
+ */
 function buildLineChartLine(graphGroup, graphHeight, countryStudentValues, xScale, yScale, clazz) {
   const linePath = graphGroup
     .append("path")
@@ -293,11 +448,11 @@ function buildLineChartLine(graphGroup, graphHeight, countryStudentValues, xScal
         .x(function (d) {
           return xScale(d.year);
         })
-        .y(function () {
-          return graphHeight;
+        .y(function (d) {
+          return yScale(d.count);
         })
     )
-    .style("opacity", 0)
+    // .style("opacity", 0)
     .on("mouseover", function () {
       d3.select(this).attr("stroke-width", 3);
     })
@@ -305,22 +460,55 @@ function buildLineChartLine(graphGroup, graphHeight, countryStudentValues, xScal
       d3.select(this).attr("stroke-width", 1.5);
     });
 
+    // const transitionPath = d3
+    // .transition()
+    // .ease(d3.easeSin)
+    // .duration(2500);
 
+    // linePath.transition(transitionPath).attr("stroke-dashoffset", 0);
+  // linePath
+  //   .transition()
+  //   .ease(d3.easeSin)
+  //   .duration(2500)
+  //   // .style("opacity", 1)
+  //   .attr(
+  //     "d",
+  //     d3
+  //       .line()
+  //       .x(function (d) {
+  //         return xScale(d.year);
+  //       })
+  //       .y(function (d) {
+  //         return yScale(d.count);
+  //       })
+  //   )
+    
+  const pathLength = linePath.node().getTotalLength();
+  
   linePath
+    .attr("stroke-dashoffset", pathLength)
+    .attr("stroke-dasharray", pathLength)
     .transition()
+    .ease(d3.easeSin)
     .duration(1000)
-    .style("opacity", 1)
-    .attr(
-      "d",
-      d3
-        .line()
-        .x(function (d) {
-          return xScale(d.year);
-        })
-        .y(function (d) {
-          return yScale(d.count);
-        })
-    )
+    .attr("stroke-dashoffset", 0);
+   
+//build line according to data values and add transition for line
+  // linePath
+  //   .transition()
+  //   .duration(1000)
+  //   .ease(d3.easeCubicInOut)
+  //   .attr(
+  //     "d",
+  //     d3
+  //       .line()
+  //       .x(function (d) {
+  //         return xScale(d.year);
+  //       })
+  //       .y(function (d) {
+  //         return yScale(d.count);
+  //       })
+  //   )
 
   return linePath;
 }
@@ -342,7 +530,7 @@ function updateLineChartPath(lineChartPath, xScale, yScale, updatedData) {
     );
 }
 
-function buildLineChartTootipDiv() {
+function buildLineChartTooltipDiv() {
   return d3
     .select("body")
     .append("div")
@@ -350,21 +538,33 @@ function buildLineChartTootipDiv() {
     .style("opacity", 0);
 }
 
-function buildLineChartDots(graphGroup, lineDiv, graphHeight, countryStudentValues, xScale, yScale, country) {
+/*
+  This method create data points as dots in the line chart
+*/
+function createLineChartDots(graphGroup, lineDiv, graphHeight, countryStudentValues, xScale, yScale, country) {
+
   const dots = graphGroup
     .selectAll("dot")
     .data(countryStudentValues)
     .enter()
     .append("circle")
-    .attr("r", 5)
+    .attr("r", 3)
     .attr("cx", function (d) {
       return xScale(d.year);
     })
-    .attr("cy", function () {
-      return graphHeight;
+    .attr("cy", function (d) {
+      return yScale(d.count);
     })
+    // .attr("cx", function (d) {
+    //   return 0;
+    // })
+    // .attr("cy", function () {
+    //   return graphHeight;
+    // })
     .style("opacity", 0)
     .on("mouseover", function (event, d) {
+
+      //Change the opacity of the dot when mouse hover on the data point
       d3.select(this).style("opacity", 1);
 
       const bbox = this.getBBox;
@@ -379,6 +579,7 @@ function buildLineChartDots(graphGroup, lineDiv, graphHeight, countryStudentValu
         })
         .style("opacity", 0.9);
 
+      //Set the line chart tooltip text
       lineDiv
         .html(`<b> ${country} </b><br/> year: ${d.year} <br/> Student count: ${d.count}`)
         .style("left", event.pageX + 10 + "px")
@@ -391,7 +592,7 @@ function buildLineChartDots(graphGroup, lineDiv, graphHeight, countryStudentValu
 
   dots
     .transition()
-    .duration(1000)
+    .duration(3000)
     .style("opacity", 0.4)
     .attr("cx", function (d) {
       return xScale(d.year);
@@ -454,9 +655,13 @@ function getYScale(yMax, graphHeight) {
     .range([graphHeight, 0]);
 }
 
+/*
+  Add values to country drop down
+*/
 function countryDropDown(dropdownContainer, countries) {
 
   //console.log(countries);
+  //drop down value list
   const data = ["Select", ...countries]
 
   const dropDown = dropdownContainer
@@ -473,9 +678,14 @@ function countryDropDown(dropdownContainer, countries) {
   options.attr("value", function (d) {
     return d;
   });
+
   return dropDown;
 }
 
+/**
+ * This method get the drop down action and update the values for second line creation
+ *  
+ */
 function dropdownOnChangeActions(dropdown, dataSetY, yMax, secondaryGraphGroup, modal, margin, xScale, graphWidth, yScale, graphHeight, secondaryLineChartPath, secondaryLineChartDots, lineTooltipDiv, axes, linePath, dots) {
   const selectedOption = dropdown.property("value")
   const secondaryDataSetY = [...dataSetY];
@@ -499,7 +709,7 @@ function dropdownOnChangeActions(dropdown, dataSetY, yMax, secondaryGraphGroup, 
     yScale = getYScale(secondaryYMax, graphHeight);
     if (!secondaryLineChartPath) {
       secondaryLineChartPath = buildLineChartLine(secondaryGraphGroup, graphHeight, secondSelectedCountryStudentValues, xScale, yScale, 'secondary');
-      secondaryLineChartDots = buildLineChartDots(secondaryGraphGroup, lineTooltipDiv, graphHeight, secondSelectedCountryStudentValues, xScale, yScale, secondSelectedCountry);
+      secondaryLineChartDots = createLineChartDots(secondaryGraphGroup, lineTooltipDiv, graphHeight, secondSelectedCountryStudentValues, xScale, yScale, secondSelectedCountry);
     } else {
       updateLineChartPath(secondaryLineChartPath, xScale, yScale, secondSelectedCountryStudentValues);
       updateLineChartDots(secondaryLineChartDots, xScale, yScale, secondSelectedCountryStudentValues, lineTooltipDiv, secondSelectedCountry);
@@ -542,6 +752,12 @@ function dropdownOnChangeActions(dropdown, dataSetY, yMax, secondaryGraphGroup, 
   };
 }
 
+
+/*========================================================
+    This method create the line chart
+
+  ========================================================
+*/
 function buildLineChart(selectedCountry, modalDiv, event) {
 
   //Check whether the selected Country data is available
@@ -568,18 +784,27 @@ function buildLineChart(selectedCountry, modalDiv, event) {
       yMax.push(d.count);
     });
 
-    //****SCALE THE DATA****
+    //scale the data  
     let xScale = getXScale(dataSetY, graphWidth);
+
     //set min y value as zero
     let yScale = getYScale(yMax, graphHeight);
 
+    //Create drop down container
     const dropdownContainer = modalDiv
       .append("div")
-      .attr("id", "dropdown-container")
+      .attr("class","dropdown-container")
+      .attr("id", "dropdown-container");
 
-    const dropdown = countryDropDown(dropdownContainer, countries)
+    //Append instruction text
+    dropdownContainer.append("text")
+    .style("font-size", 14).attr("class","modalLabel").text("Please select a country to compare");
 
-    const modal = modalDiv
+    //Append drop down with country names to the modal
+    const dropdown = countryDropDown(dropdownContainer, countries);
+
+    //Append SVG to the modal div tag
+    const modalSVG = modalDiv
       .append("svg")
       .attr("class", "modal")
       .attr("id", "content")
@@ -587,7 +812,7 @@ function buildLineChart(selectedCountry, modalDiv, event) {
       .attr("height", modalHeight)
       .style("z-index", "10");
 
-    const primaryGraphGroup = buildLineChartGraphGroup(modal, margin, 'primary');
+    const primaryGraphGroup = buildLineChartGraphGroup(modalSVG, margin, 'primary');
 
     //****BUILD THE AXES****
     const axes = buildLineChartAxes(primaryGraphGroup, graphHeight, xScale, yScale);
@@ -602,12 +827,14 @@ function buildLineChart(selectedCountry, modalDiv, event) {
       .style("left", modalPositionX + "px")
       .style("top", modalPositionY + "px");
 
-    const lineTooltipDiv = buildLineChartTootipDiv();
+    //Build line chart tooltip div
+    const lineTooltipDiv = buildLineChartTooltipDiv();
 
+    //Build line in the line chart
     const linePath = buildLineChartLine(primaryGraphGroup, graphHeight, countryStudentValues, xScale, yScale, 'primary');
 
     // add the dots with tooltips
-    const dots = buildLineChartDots(primaryGraphGroup, lineTooltipDiv, graphHeight, countryStudentValues, xScale, yScale, country);
+    const dots = createLineChartDots(primaryGraphGroup, lineTooltipDiv, graphHeight, countryStudentValues, xScale, yScale, country);
 
 
     let secondaryGraphGroup;
@@ -615,7 +842,7 @@ function buildLineChart(selectedCountry, modalDiv, event) {
     let secondaryLineChartDots;
 
     dropdown.on("change", function () {
-      const res = dropdownOnChangeActions(dropdown, dataSetY, yMax, secondaryGraphGroup, modal, margin, xScale, graphWidth, yScale, graphHeight, secondaryLineChartPath, secondaryLineChartDots, lineTooltipDiv, axes, linePath, dots);
+      const res = dropdownOnChangeActions(dropdown, dataSetY, yMax, secondaryGraphGroup, modalSVG, margin, xScale, graphWidth, yScale, graphHeight, secondaryLineChartPath, secondaryLineChartDots, lineTooltipDiv, axes, linePath, dots);
       xScale = res.xScale;
       yScale = res.yScale;
       secondaryGraphGroup = res.secondaryGraphGroup;
@@ -624,6 +851,10 @@ function buildLineChart(selectedCountry, modalDiv, event) {
     });
 
   } else {
+
+    /**
+     * This code block will run when selected country has no student data.
+     */
     modalDiv.append("div").append("h5").html("Data is not available");
     const modalDivRect = modalDiv.node().getBoundingClientRect();
 
@@ -635,14 +866,17 @@ function buildLineChart(selectedCountry, modalDiv, event) {
   modalPositionY = modalPositionY < 0 ? 10 : modalPositionY;
 }
 
-function convertDataset(dataset) {
-  const dataMap = d3.map(dataSet, (value) => {
-    const data = {country: value.Country, values: []};
-    for (let index = 2015; index <= 2023; index++) {
-      const val = {year: index, count: value[index]};
-      data.values.push(val);
-    }
-    return data;
-  });
-  console.log(JSON.stringify(dataMap));
-}
+/*
+    This function was used to create the student json file
+*/
+// function convertDataset(dataset) {
+//   const dataMap = d3.map(dataSet, (value) => {
+//     const data = {country: value.Country, values: []};
+//     for (let index = 2015; index <= 2023; index++) {
+//       const val = {year: index, count: value[index]};
+//       data.values.push(val);
+//     }
+//     return data;
+//   });
+//   console.log(JSON.stringify(dataMap));
+// }

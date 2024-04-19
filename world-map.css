@@ -1,7 +1,7 @@
 #map-container {
   width: 90vw;
   height: 90vh;
-  margin-left: 100px;
+  margin-left: 70px;
   /* border: 5px solid red; */
 
 }
@@ -36,7 +36,7 @@ div.tooltip {
   padding: 1px;
   font: 15px sans-serif;
   color: white;
-  background: rgb(0, 0, 0);
+  background: rgb(23, 53, 92);
   border: 1px solid #16171d;
   border-radius: 8px;
   pointer-events: none;
@@ -83,13 +83,27 @@ div.modal {
 
 }
 
+.dropdown-container{
+  padding-top:5px;
+}
+
 .title h2{
   text-align: center;
   font-size: 22px;
   font-weight: 700; color:#202020;
   /* text-transform: uppercase; */
   word-spacing: 1px; letter-spacing:2px;
+  margin-block-start: 0.7em;
+  margin-block-end: 0.1em;
+  background-color: rgb(232, 192, 163);
+
+}
+
+.info h5{
+  text-align:left;
+  color:rgb(147, 73, 16);
+  font-size: 15px;
+  margin-left: 7px;
   margin-block-start: 0.1em;
   margin-block-end: 0.1em;
-
 }

@@ -33,3 +33,9 @@ div.lineTooltip {
 .selection {
     width: 50%;
 }
+
+.modalLabel {
+    font: 8px sans-serif;
+    padding-right: 7px;
+    color: rgb(104, 56, 21);
+}

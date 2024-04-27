@@ -280,7 +280,7 @@
     ]
   },
   {
-    "country": "Benin, Republic of",
+    "country": "Benin",
     "values": [
       { "year": 2015, "count": 420 },
       { "year": 2016, "count": 405 },
@@ -364,7 +364,7 @@
     ]
   },
   {
-    "country": "Botswana, Republic of",
+    "country": "Republic of Botswana",
     "values": [
       { "year": 2015, "count": 50 },
       { "year": 2016, "count": 65 },
@@ -462,7 +462,7 @@
     ]
   },
   {
-    "country": "Cameroon, Federal Republic of",
+    "country": "Republic of Cameroon",
     "values": [
       { "year": 2015, "count": 1100 },
       { "year": 2016, "count": 1165 },
@@ -518,7 +518,7 @@
     ]
   },
   {
-    "country": "Chad, Republic of",
+    "country": "Republic of Chad",
     "values": [
       { "year": 2015, "count": 55 },
       { "year": 2016, "count": 85 },
@@ -588,7 +588,7 @@
     ]
   },
   {
-    "country": "Congo, Democratic Republic of the",
+    "country": "Democratic Republic of the Congo",
     "values": [
       { "year": 2015, "count": 470 },
       { "year": 2016, "count": 575 },
@@ -602,7 +602,7 @@
     ]
   },
   {
-    "country": "Congo, People's Republic of the",
+    "country": "Republic of the Congo",
     "values": [
       { "year": 2015, "count": 170 },
       { "year": 2016, "count": 165 },
@@ -714,7 +714,7 @@
     ]
   },
   {
-    "country": "Djibouti, Republic of",
+    "country": "Republic of Djibouti",
     "values": [
       { "year": 2015, "count": 25 },
       { "year": 2016, "count": 40 },
@@ -812,7 +812,7 @@
     ]
   },
   {
-    "country": "Equatorial Guinea, Republic of",
+    "country": "Republic of Equatorial Guinea",
     "values": [
       { "year": 2015, "count": 0 },
       { "year": 2016, "count": 0 },
@@ -1064,7 +1064,7 @@
     ]
   },
   {
-    "country": "Guinea, Republic of",
+    "country": "Republic of Guinea",
     "values": [
       { "year": 2015, "count": 190 },
       { "year": 2016, "count": 300 },
@@ -1246,7 +1246,7 @@
     ]
   },
   {
-    "country": "Ireland, Republic of",
+    "country": "Ireland",
     "values": [
       { "year": 2015, "count": 230 },
       { "year": 2016, "count": 235 },
@@ -1288,7 +1288,7 @@
     ]
   },
   {
-    "country": "Ivory Coast, Republic of",
+    "country": "Republic of Ivory Coast",
     "values": [
       { "year": 2015, "count": 665 },
       { "year": 2016, "count": 715 },
@@ -1400,7 +1400,7 @@
     ]
   },
   {
-    "country": "Kosovo, Republic of",
+    "country": "Republic of Kosovo",
     "values": [
       { "year": 2015, "count": 40 },
       { "year": 2016, "count": 45 },
@@ -1638,7 +1638,7 @@
     ]
   },
   {
-    "country": "Maldives, Republic of",
+    "country": "Republic of Maldives",
     "values": [
       { "year": 2015, "count": 0 },
       { "year": 2016, "count": 0 },
@@ -1652,7 +1652,7 @@
     ]
   },
   {
-    "country": "Mali, Republic of",
+    "country": "Republic of Mali",
     "values": [
       { "year": 2015, "count": 380 },
       { "year": 2016, "count": 440 },
@@ -1680,7 +1680,7 @@
     ]
   },
   {
-    "country": "Marshall Islands, Republic of the",
+    "country": "Republic of the Marshall Islands",
     "values": [
       { "year": 2015, "count": 0 },
       { "year": 2016, "count": 0 },
@@ -1806,7 +1806,7 @@
     ]
   },
   {
-    "country": "Montenegro, Republic of",
+    "country": "Republic of Montenegro",
     "values": [
       { "year": 2015, "count": 5 },
       { "year": 2016, "count": 0 },
@@ -1890,7 +1890,7 @@
     ]
   },
   {
-    "country": "Netherlands Antilles, The",
+    "country": "Netherlands Antilles",
     "values": [
       { "year": 2015, "count": 0 },
       { "year": 2016, "count": 0 },
@@ -1904,7 +1904,7 @@
     ]
   },
   {
-    "country": "Netherlands, The",
+    "country": "Netherlands",
     "values": [
       { "year": 2015, "count": 280 },
       { "year": 2016, "count": 335 },
@@ -2044,7 +2044,7 @@
     ]
   },
   {
-    "country": "Palau, Republic of",
+    "country": "Republic of Palau",
     "values": [
       { "year": 2015, "count": 0 },
       { "year": 2016, "count": 0 },
@@ -2324,7 +2324,7 @@
     ]
   },
   {
-    "country": "Serbia, Republic of",
+    "country": "Serbia",
     "values": [
       { "year": 2015, "count": 95 },
       { "year": 2016, "count": 100 },
@@ -2436,7 +2436,7 @@
     ]
   },
   {
-    "country": "Somalia, Democratic Republic of",
+    "country": "Somalia",
     "values": [
       { "year": 2015, "count": 20 },
       { "year": 2016, "count": 80 },
@@ -2450,7 +2450,7 @@
     ]
   },
   {
-    "country": "South Africa, Republic of",
+    "country": "South Africa",
     "values": [
       { "year": 2015, "count": 300 },
       { "year": 2016, "count": 345 },
@@ -2562,7 +2562,7 @@
     ]
   },
   {
-    "country": "Sudan, Democratic Republic of",
+    "country": "Sudan",
     "values": [
       { "year": 2015, "count": 75 },
       { "year": 2016, "count": 95 },
@@ -2702,7 +2702,7 @@
     ]
   },
   {
-    "country": "Togo, Republic of",
+    "country": "Togo",
     "values": [
       { "year": 2015, "count": 295 },
       { "year": 2016, "count": 265 },
@@ -2856,7 +2856,7 @@
     ]
   },
   {
-    "country": "United Kingdom and Overseas Territories",
+    "country": "United Kingdom",
     "values": [
       { "year": 2015, "count": 2060 },
       { "year": 2016, "count": 2270 },

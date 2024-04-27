@@ -1,4 +1,4 @@
-const maxWidth = window.innerWidth * 0.8;
+const maxWidth = window.innerWidth * 0.8 - 75;
 const maxHeight = window.innerHeight * 0.9;
 const ratio = 0.5;
 
@@ -277,12 +277,23 @@ function buildChoroplethMap() {
 
         });
 
+      const colourDomainLength = colourDomain.length;
       legendGroup.append("text")
         .attr("x", 50)
         .attr("y", 9)
         .attr("dy", ".35em")
-        .text(function (d) {
-          return d
+        .text(function (d, i) {
+          if (i === colourDomainLength - 1) {
+            // No data point
+            return d;
+          } else if (i === 0) {
+            // upper limit
+            return `${d} Upward`
+          } else {
+            // middle points
+            const nextColourDomain = colourDomain[colourDomainLength - i] - 1 // getting next point and minus 1
+            return `${d} - ${nextColourDomain}`
+          }
         });
 
       //           .selectAll('circle')

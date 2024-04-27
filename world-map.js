@@ -778,21 +778,24 @@ function dropdownOnChangeActions(dropdown, dataSetY, yMax, secondaryGraphGroup, 
     }
   } else {
     if (secondaryGraphGroup) {
+      const duration = 500
       secondaryGraphGroup
         .transition()
-        .duration(500)
+        .duration(duration)
         .style("opacity", 0)
         .remove();
       secondaryGraphGroup = undefined
       if (secondaryLineChartPath) {
+        const pathLength = secondaryLineChartPath.node().getTotalLength();
         secondaryLineChartPath
           .transition()
-          .duration(500)
+          .duration(duration)
+          .attr("stroke-dashoffset", pathLength)
           .remove()
         secondaryLineChartPath = undefined
         secondaryLineChartDots
           .transition()
-          .duration(500)
+          .duration(duration)
           .remove()
         secondaryLineChartDots = undefined
       }

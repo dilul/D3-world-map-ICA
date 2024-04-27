@@ -1,4 +1,4 @@
-const maxWidth = window.innerWidth * 0.9;
+const maxWidth = window.innerWidth * 0.8;
 const maxHeight = window.innerHeight * 0.9;
 const ratio = 0.5;
 
@@ -18,28 +18,41 @@ let modalPositionY = h / 2;
 
 const studentData = new Map();
 const colourScaleData = new Map();
-const colourMap = new Map([
-  [0, "#ffff"],
-  [100, "#fff5eb"],
-  [1000, "#fee8d3"],
-  [4000,"fdd8b3"],
-  [8000,"#fdc28c"],
-  [12000,"#fda762"],
-  [16000,"#fb8d3d"],
-  [20000, "#f2701d"],
-  [24000,"#e25609"],
-  [28000,"#c44103"],
-  [32000,"#9f3303"],
-  [36000,"#7f2704"]
-]);
+const colourDomain = ['No data', 0, 100, 1000, 4000, 8000, 12000, 16000, 20000, 24000, 28000, 32000, 36000, 40000, 44000, 48000, 52000, 56000, 60000, 64000]
+const colourRange = [
+  "#000",
+  "#000",
+  "#fff",
+  "#fff5eb",
+  "#fee8d3",
+  "#fdd8b3",
+  "#fdc28c",
+  "#fda762",
+  "#fb8d3d",
+  "#f2701d",
+  "#e25609",
+  "#c44103",
+  "#9f3303",
+  "#892303",
+  "#7f1303",
+  "#690303",
+  "#5f3303",
+  "#493303",
+  "#3f3303",
+  "#293303",
+  "#1f3303",
+  "#093303"
+]
 
 const colorScale = d3
   .scaleThreshold()
- // .domain([12])
- //.domain([0, 100, 1000, 4000, 8000, 12000, 16000, 20000, 24000]).range(d3.schemeOranges[9]);
- .domain(colourMap.keys()).range(colourMap.values());
-  // .domain([0, 100, 1000, 4000, 8000, 12000, 16000, 20000, 24000, 28000, 32000, 36000])
-  // .range(["#ffff","#fff5eb","#fee8d3","#fdd8b3","#fdc28c","#fda762","#fb8d3d","#f2701d","#e25609","#c44103","#9f3303","#7f2704"]);
+  // .domain([12])
+  //.domain([0, 100, 1000, 4000, 8000, 12000, 16000, 20000, 24000]).range(d3.schemeOranges[9]);
+  // .domain(colourMap.keys()).range(colourMap.values());
+  .domain(colourDomain)
+  .range(colourRange);
+// .domain([0, 100, 1000, 4000, 8000, 12000, 16000, 20000, 24000, 28000, 32000, 36000])
+// .range(["#ffff","#fff5eb","#fee8d3","#fdd8b3","#fdc28c","#fda762","#fb8d3d","#f2701d","#e25609","#c44103","#9f3303","#7f2704"]);
 
 
 populateStudentDataAndBuildMap();
@@ -55,11 +68,17 @@ function populateStudentDataAndBuildMap() {
       const total = dataSet.values
         .map((val) => val.count)
         .reduce((a, b) => a + b);
-      const values = {...dataSet, total};
-      studentData.set(dataSet.country, values);
+      const colour = colorScale(total || 0)
+      const values = {...dataSet, total, colour};
+      const country = dataSet.country;
+      studentData.set(country, values);
+
+      const colourCountries = colourScaleData.get(colour) || []
+      colourScaleData.set(colour, [...colourCountries, country.replace(/ /g, '')])
     });
     console.log(studentData);
-    buildChoreplethMap();
+    console.log(colourScaleData);
+    buildChoroplethMap();
   });
 }
 
@@ -69,10 +88,10 @@ function populateStudentDataAndBuildMap() {
 // .rotate([-180,0]);
 
 /*===============================================
-   This method build Chorepleth Map
+   This method build Choropleth Map
   ===============================================
 */
-function buildChoreplethMap() {
+function buildChoroplethMap() {
 
   const projection = d3
     .geoEquirectangular()
@@ -101,6 +120,8 @@ function buildChoreplethMap() {
       //Bind data and create one path per GeoJSON feature
       const countriesGroup = svg.append("g").attr("id", "map");
 
+      let selectedColourScale;
+
       //Add Sphere
       countriesGroup
         .append("path")
@@ -116,14 +137,27 @@ function buildChoreplethMap() {
         .attr("class", "country")
         .attr("d", path)
         .style("stroke", "black")
-        .attr("fill", getColourMap)
+        .attr("fill", function (d) {
+          const countryData = getCountryStudentDataFromMap(d);
+          if (d.properties.name === 'Canada') {
+            return "#f44"
+          }
+          return countryData?.colour || 0;
+        })
         //.attr("class",function(d){ return "Country" })
         .style("opacity", 0.8)
-        .attr("id", function (d, i) {
-         // console.log(d.properties.iso_a3)
-          console.log(d.properties.name)
+        .attr("id", function (d) {
+          // console.log(d.properties.iso_a3)
+          // console.log(d.properties.name)
 
-          return "country" + d.properties.name;
+          const countryData = getCountryStudentDataFromMap(d);
+          const countryName = (countryData?.country || d.properties.name).replace(/ /g, '');
+          if (!countryData) {
+            const colour = colorScale('No data')
+            const colourCountries = colourScaleData.get(colour) || []
+            colourScaleData.set(colour, [...colourCountries, countryName])
+          }
+          return "country" + countryName;
         })
         .on("mouseover", function (event, d) {
           const bbox = this.getBBox();
@@ -149,8 +183,8 @@ function buildChoreplethMap() {
             })
             .style("opacity", 0.9);
 
-            //Set the tooltip text and the style
-            mapTooltip
+          //Set the tooltip text and the style
+          mapTooltip
             .html(d.properties.name + "<br/>" + "Total Student Count : " + total + "<br/>")
             .style("left", event.pageX + 10 + "px")
             .style("top", event.pageY - 10 + "px");
@@ -205,38 +239,51 @@ function buildChoreplethMap() {
         //Every node in teh data should have a 'g' appended
         .enter().append('g')
         // "translate(" + w + 100 + " ,200)"
-        .attr("transform", function(d, i) { return "translate("+(w+20)+"," + i * 20 + ")"; });
-      
-      const legend  = legendGroup.append("rect")
-                // .datum(json.features)
-                // .attr('x', function(d,i) { return d*i; })
-      //.attr('y', 120)
-      .attr('width', 40)
-      .attr('height', 25)
-      .attr('stroke', 'black')
-      .attr('fill', colorScale)
-      .on("click",function(event,d){
-      
-       // console.log(studentData);
-        // for (let countryObj of studentData.values().map()) {
-        //   countryObj?.total
-        // }
-        const mapedColour = colourMap.get(d);
-        const mappedCountry = colourScaleData.get(mapedColour);
+        .attr("transform", function (d, i) {
+          return "translate(" + (w + 20) + "," + i * 20 + ")";
+        });
 
-        currentOpacity = d3.selectAll("#country"+mappedCountry).node().getBoundingClientRect();
-        console.log(currentOpacity.style);
-        console.log(currentOpacity);
-        //console.log(currentOpacity.style("opacity"));
-        d3.selectAll("country"+mappedCountry).style("opacity", currentOpacity == 0.8 ? 1:0);
+      const legend = legendGroup.append("rect")
+        // .datum(json.features)
+        // .attr('x', function(d,i) { return d*i; })
+        //.attr('y', 120)
+        .attr('width', 40)
+        .attr('height', 25)
+        .attr('stroke', 'black')
+        .attr('fill', colorScale)
+        .on("click", function (event, d) {
+          console.log(event)
+          const opacity = selectedColourScale === d ? 0.8 : 0.2;
+          const allCountries = d3.selectAll(".country");
 
-      });
+          allCountries.style("opacity", opacity);
+
+          if (selectedColourScale !== d) {
+            selectedColourScale = d;
+            const mappedCountries = colourScaleData.get(colorScale(d)) || [];
+            for (const country of mappedCountries) {
+              try {
+                const selectCountry = d3.selectAll("#country" + country);
+                if (selectCountry) {
+                  selectCountry.style("opacity", 1);
+                }
+              } catch (e) {
+                console.error(country, e)
+              }
+            }
+          } else {
+            selectedColourScale = undefined;
+          }
+
+        });
 
       legendGroup.append("text")
-    .attr("x", 50)
-    .attr("y", 9)
-    .attr("dy", ".35em")
-    .text(function(d) { return d});
+        .attr("x", 50)
+        .attr("y", 9)
+        .attr("dy", ".35em")
+        .text(function (d) {
+          return d
+        });
 
       //           .selectAll('circle')
       //           .data(studentData)
@@ -276,22 +323,21 @@ function buildChoreplethMap() {
 
 /**
  * This method returns the colour scale for the map according to the total students
- * 
+ *
  */
-function getColourMap(country) {
-  //****Apply red colour scale according to the total students**
-  const countryData = getCountryStudentDataFromMap(country);
-  // console.log(countryData?.country);
-  // if( countryData.country=="Canada"){
-  //   return "#0000";
-  // }
-  const colour = colorScale(countryData?.total || 0);
-
-  colourScaleData.set(countryData?.name,colour);
-  console.log(colourScaleData.get("India"));
-  return colour;
-
-}
+// function getColourMap(country) {
+//   //****Apply red colour scale according to the total students**
+//   const countryData = getCountryStudentDataFromMap(country);
+//   // console.log(countryData?.country);
+//   // if( countryData.country=="Canada"){
+//   //   return "#0000";
+//   // }
+//   const colour = colorScale(countryData?.total || 0);
+//
+//   colourScaleData.set(countryData?.country, colour);
+//   return colour;
+//
+// }
 
 /*
   This method returns the country related data
@@ -317,7 +363,7 @@ function getCountryStudentDataFromMap(d) {
 
 /**
  * This method create the modal to display the line chart
- * 
+ *
  */
 function createModalDiv(event, d) {
   d3.select("#lineChart.modal").remove();
@@ -460,12 +506,12 @@ function buildLineChartLine(graphGroup, graphHeight, countryStudentValues, xScal
       d3.select(this).attr("stroke-width", 1.5);
     });
 
-    // const transitionPath = d3
-    // .transition()
-    // .ease(d3.easeSin)
-    // .duration(2500);
+  // const transitionPath = d3
+  // .transition()
+  // .ease(d3.easeSin)
+  // .duration(2500);
 
-    // linePath.transition(transitionPath).attr("stroke-dashoffset", 0);
+  // linePath.transition(transitionPath).attr("stroke-dashoffset", 0);
   // linePath
   //   .transition()
   //   .ease(d3.easeSin)
@@ -482,9 +528,9 @@ function buildLineChartLine(graphGroup, graphHeight, countryStudentValues, xScal
   //         return yScale(d.count);
   //       })
   //   )
-    
+
   const pathLength = linePath.node().getTotalLength();
-  
+
   linePath
     .attr("stroke-dashoffset", pathLength)
     .attr("stroke-dasharray", pathLength)
@@ -492,7 +538,7 @@ function buildLineChartLine(graphGroup, graphHeight, countryStudentValues, xScal
     .ease(d3.easeSin)
     .duration(1000)
     .attr("stroke-dashoffset", 0);
-   
+
 //build line according to data values and add transition for line
   // linePath
   //   .transition()
@@ -517,9 +563,10 @@ function updateLineChartPath(lineChartPath, xScale, yScale, updatedData) {
   if (updatedData) {
     lineChartPath.datum(updatedData);
   }
+  const duration = 1000
   lineChartPath
     .transition()
-    .duration(1000)
+    .duration(duration)
     .attr("d", d3.line()
       .x(function (d) {
         return xScale(d.year);
@@ -528,6 +575,21 @@ function updateLineChartPath(lineChartPath, xScale, yScale, updatedData) {
         return yScale(d.count);
       })
     );
+
+  // path length changes due to the above transition for data point changes
+  // therefore needed the following interval to check the length of the line and update it every millisecond
+
+  let counter = 0;
+  const i = setInterval(function () {
+    const pathLength = lineChartPath.node().getTotalLength();
+    lineChartPath.attr("stroke-dasharray", pathLength);
+
+    counter++;
+    if (counter === duration) {
+      clearInterval(i);
+    }
+  }, 1)
+
 }
 
 function buildLineChartTooltipDiv() {
@@ -684,7 +746,7 @@ function countryDropDown(dropdownContainer, countries) {
 
 /**
  * This method get the drop down action and update the values for second line creation
- *  
+ *
  */
 function dropdownOnChangeActions(dropdown, dataSetY, yMax, secondaryGraphGroup, modal, margin, xScale, graphWidth, yScale, graphHeight, secondaryLineChartPath, secondaryLineChartDots, lineTooltipDiv, axes, linePath, dots) {
   const selectedOption = dropdown.property("value")
@@ -793,12 +855,12 @@ function buildLineChart(selectedCountry, modalDiv, event) {
     //Create drop down container
     const dropdownContainer = modalDiv
       .append("div")
-      .attr("class","dropdown-container")
+      .attr("class", "dropdown-container")
       .attr("id", "dropdown-container");
 
     //Append instruction text
     dropdownContainer.append("text")
-    .style("font-size", 14).attr("class","modalLabel").text("Please select a country to compare");
+      .style("font-size", 14).attr("class", "modalLabel").text("Please select a country to compare");
 
     //Append drop down with country names to the modal
     const dropdown = countryDropDown(dropdownContainer, countries);

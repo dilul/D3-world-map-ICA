@@ -74,7 +74,7 @@ function populateStudentDataAndBuildMap() {
       studentData.set(country, values);
 
       const colourCountries = colourScaleData.get(colour) || []
-      colourScaleData.set(colour, [...colourCountries, country.replace(/ /g, '')])
+      colourScaleData.set(colour, [...colourCountries, getId(country)])
     });
     console.log(studentData);
     console.log(colourScaleData);
@@ -151,7 +151,7 @@ function buildChoroplethMap() {
           // console.log(d.properties.name)
 
           const countryData = getCountryStudentDataFromMap(d);
-          const countryName = (countryData?.country || d.properties.name).replace(/ /g, '');
+          const countryName = getId(countryData?.country || d.properties.name);
           if (!countryData) {
             const colour = colorScale('No data')
             const colourCountries = colourScaleData.get(colour) || []
@@ -248,15 +248,27 @@ function buildChoroplethMap() {
         // .attr('x', function(d,i) { return d*i; })
         //.attr('y', 120)
         .attr('width', 40)
-        .attr('height', 25)
+        .attr('height', 20)
         .attr('stroke', 'black')
         .attr('fill', colorScale)
+        .attr('class', 'legend-box')
+        .attr('id', function (d) {
+          const id = getId(`legend${d}`)
+          return id;
+        })
         .on("click", function (event, d) {
-          console.log(event)
           const opacity = selectedColourScale === d ? 0.8 : 0.2;
+          const legendOpacity = selectedColourScale === d ? 1 : 0.4;
+          const pointerEvent = selectedColourScale === d ? 'auto' : 'none';
+          // const boarderWidth = selectedColourScale === d ? 'thin' : 'thick';
           const allCountries = d3.selectAll(".country");
 
-          allCountries.style("opacity", opacity);
+          allCountries
+            .style("opacity", opacity)
+            .style("pointer-events", pointerEvent);
+
+          const allLegends = d3.selectAll(".legend-box");
+          allLegends.style("opacity", legendOpacity);
 
           if (selectedColourScale !== d) {
             selectedColourScale = d;
@@ -265,12 +277,16 @@ function buildChoroplethMap() {
               try {
                 const selectCountry = d3.selectAll("#country" + country);
                 if (selectCountry) {
-                  selectCountry.style("opacity", 1);
+                  selectCountry
+                    .style("opacity", 1)
+                    .style("pointer-events", 'auto');
                 }
               } catch (e) {
                 console.error(country, e)
               }
             }
+            const id = getId(`legend${d}`)
+            d3.select(`#${id}`).style("opacity", 1);
           } else {
             selectedColourScale = undefined;
           }
@@ -330,6 +346,10 @@ function buildChoroplethMap() {
     .catch(function (error) {
       console.log(error);
     });
+}
+
+function getId(rawId) {
+  return rawId.replace(/\W+/g, '');
 }
 
 /**

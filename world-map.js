@@ -1,4 +1,20 @@
-const maxWidth = window.innerWidth * 0.9 - 175;
+/********************************************************
+ * World Map with Line Chart
+ * Name and Index: Kananke Liyanage, Nalinika (D3220766)
+ ********************************************************
+*/
+/*
+  Country Geo json file generated using, https://geojson-maps.kyd.au/
+  Inspiration sources:
+  https://dev.to/sriramvsharma/drawing-a-world-map-in-13-lines-of-code-368a
+  https://medium.com/@andybarefoot/making-a-map-using-d3-js-8aa3637304ee
+  https://d3-graph-gallery.com/graph/line_basic.html
+  https://d3-graph-gallery.com/graph/line_change_data.html
+  
+  Colour scheme source: https://github.com/d3/d3-scale-chromatic
+*/
+
+const maxWidth = window.innerWidth * 0.85 - 175;
 const maxHeight = window.innerHeight * 0.9;
 const ratio = 0.5;
 
@@ -10,6 +26,7 @@ if (h > maxHeight) {
   w = h / ratio;
 }
 
+//Modal window width and height
 const modalWidth = w * 0.55;
 const modalHeight = modalWidth * 0.8;
 
@@ -18,21 +35,19 @@ let modalPositionY = h / 2;
 
 const studentData = new Map();
 const colourScaleData = new Map();
-const colourDomain = ['No data', 0, 100, 1000, 5000, 10000, 15000, 25000, 50000, 75000, 100000]
-const colourRange = [
-  "#000",
-  "#000",
-  "#fff",
-  "#fed8b1",
-  "#ffae42",
-  "#f58025",
-  "#fa5b3d",
-  "#9f2d03",
-  "#954503",
-  "#782001",
-  "#600202",
-  "#290303"
-]
+
+//define the student count intervals
+const colourDomain = [0, 100, 1000, 5000, 10000, 15000, 25000, 50000, 75000, 100000]
+//define colour range for data intervals
+const colourRange = ["#FFFFFF","#FFFFFF","#ffffcc",
+  "#ffeda0",
+  "#fed976",
+  "#feb24c",
+  "#fd8d3c",
+  "#fc4e2a",
+  "#e31a1c",
+  "#bd0026",
+  "#800026"]
 
 const colorScale = d3
   .scaleThreshold()
@@ -40,6 +55,10 @@ const colorScale = d3
   .range(colourRange);
 
 
+/*===================================================
+  Initiate the student data loading and map building
+*====================================================
+*/
 populateStudentDataAndBuildMap();
 
 
@@ -53,14 +72,20 @@ function populateStudentDataAndBuildMap() {
       const colour = colorScale(record.total)
       const values = {...record, colour};
       const country = record.country;
+
+      //Store student data in map (To load specific country data)
       studentData.set(country, values);
 
+      //Store countries belong to same colour code (For interactive legend of the map)
       const colourCountries = colourScaleData.get(colour) || []
       colourScaleData.set(colour, [...colourCountries, getId(country)])
     });
+
+    //Calling choropleth map building method
     buildChoroplethMap();
   });
 }
+
 
 /*===============================================
    This method build Choropleth Map
@@ -68,12 +93,14 @@ function populateStudentDataAndBuildMap() {
 */
 function buildChoroplethMap() {
 
+  //Define projection style
   const projection = d3
     .geoEquirectangular()
     .center([0, 0])
     .scale([w / (2 * Math.PI)])
     .translate([w / 2, h / 2]);
 
+  //geographic path generator
   const path = d3.geoPath().projection(projection);
 
   //Read country data from json file
@@ -81,11 +108,14 @@ function buildChoroplethMap() {
     .then(function (json) {
       const mapContainer = d3.select("#map-container");
       const contRect = mapContainer.node().getBoundingClientRect();
+
+      //Append SVG to the map-container div 
       const svg = mapContainer
         .append("svg")
         .attr("width", contRect.width)
         .attr("height", maxHeight);
 
+      
       const mapTooltip = d3
         .select("body")
         .append("div")
@@ -104,6 +134,7 @@ function buildChoroplethMap() {
         .style("fill", "white")
         .attr("d", path({type: "Sphere"}));
 
+      //Draw the map
       countriesGroup
         .selectAll("path")
         .data(json.features)
@@ -112,24 +143,28 @@ function buildChoroplethMap() {
         .attr("class", "country")
         .attr("d", path)
         .style("stroke", "black")
-        .attr("fill", function (d) {
-          const countryData = getCountryStudentDataFromMap(d);
-          if (d.properties.name === 'Canada') {
-            return "#4c2c39"
-          }
-          return countryData?.colour || 0;
-        })
-        .style("opacity", 0.8)
+        .style("opacity", 1)
         .attr("id", function (d) {
 
           const countryData = getCountryStudentDataFromMap(d);
           const countryName = getId(countryData?.country || d.properties.name);
-          if (!countryData) {
-            const colour = colorScale('No data');
-            const colourCountries = colourScaleData.get(colour) || [];
-            colourScaleData.set(colour, [...colourCountries, countryName]);
-          }
+          // if (!countryData) {
+          //   const colour = colorScale('No data');
+          //   const colourCountries = colourScaleData.get(colour) || [];
+          //   colourScaleData.set(colour, [...colourCountries, countryName]);
+          // }
           return "country" + countryName;
+        })
+        .attr("fill", function (d) {
+
+          //Fill the country with colour scale
+          const countryData = getCountryStudentDataFromMap(d);
+
+          //Apply different colour to Canada
+          // if (d.properties.name === 'Canada') {
+          //   return "#8c0287"
+          // }
+          return countryData?.colour || colorScale('No data');
         })
         .on("mouseover", function (event, d) {
           const bbox = this.getBBox();
@@ -165,7 +200,6 @@ function buildChoroplethMap() {
 
           //Change back the country node colour when mouse move out
           d3.select(this).classed("hovernode", false);
-
           mapTooltip.transition().duration(500).style("opacity", 0);
         })
         .on("click", function (event, d) {
@@ -182,30 +216,25 @@ function buildChoroplethMap() {
           buildLineChart(selectedCountry, modalDiv, event);
         });
 
-      // set legend
+
+      /*===========================
+      * Create interactive legend
+      *============================
+      */
       const legendGroup = svg
         .append("g")
         .attr("class", "legendGroup")
         .attr('width', 148)
-        //and 148px high
         .attr('height', 148)
-        //then either select all the 'g's inside the svg
-        //or create placeholders
         .selectAll('g')
-        //Fill the data into our placeholders in reverse order
-        //This arranges our legend in descending order.
-        //The 'data' here is the items we entered in the 'domain',
-        //in this case [min, max]
-        //We use 'slice()' to create a shallow copy of the array
-        //Since we don't want to modify the original one
         .data(colorScale.domain().slice().reverse())
-        //Every node in teh data should have a 'g' appended
         .enter().append('g')
         .attr("transform", function (d, i) {
           return "translate(" + (w + 20) + "," + i * 20 + ")";
         });
 
-      const legend = legendGroup.append("rect")
+      //create rectangles for each colour 
+      legendGroup.append("rect")
         .attr('width', 40)
         .attr('height', 20)
         .attr('stroke', 'black')
@@ -216,11 +245,14 @@ function buildChoroplethMap() {
           return id;
         })
         .on("click", function (event, d) {
-          const opacity = selectedColourScale === d ? 0.8 : 0.2;
+          
+          //get the opacity of the selected colour
+          const opacity = selectedColourScale === d ? 1 : 0.2;
           const legendOpacity = selectedColourScale === d ? 1 : 0.4;
           const pointerEvent = selectedColourScale === d ? 'auto' : 'none';
           const allCountries = d3.selectAll(".country");
 
+          //Get opacity style and pointer event for all countries 
           allCountries
             .style("opacity", opacity)
             .style("pointer-events", pointerEvent);
@@ -252,6 +284,7 @@ function buildChoroplethMap() {
         });
 
       const colourDomainLength = colourDomain.length;
+      //Set the legend text
       legendGroup.append("text")
         .attr("x", 50)
         .attr("y", 9)
@@ -295,6 +328,7 @@ function getCountryStudentDataFromMap(d) {
     d.properties.name_sort,
   ];
 
+  //get the student data from map
   for (let i = 0; i < selectedCountry.length; i++) {
     if (studentData.has(selectedCountry[i])) {
       return studentData.get(selectedCountry[i]);
@@ -325,7 +359,7 @@ function createModalDiv(event, d) {
     .attr("class", "modal-header")
     .attr("id", "modal-header");
 
-  //Append a span to include a close button for the modal
+  //Append a span to header to include a close button for the modal
   const closeButton = modalHeader
     .append("span")
     .attr("class", "modal-close")
@@ -336,7 +370,7 @@ function createModalDiv(event, d) {
   //Append a close icon image to the span
   closeButton
     .append("img")
-    .attr("src", "icons8-close-window-30.png")
+    .attr("src", "close.png")
     .attr("width", 23)
     .attr("height", 23)
     .on("mouseover", function (event, d) {
@@ -350,12 +384,14 @@ function createModalDiv(event, d) {
   const modalHeading = modalHeader.append("h5").attr("class", "modal-h5");
   modalHeading.text("International Students Trend of " + d.properties.name);
 
+  //Set the modal position
   modalDiv
     .style("left", modalPositionX + "px")
     .style("top", modalPositionY + "px");
 
   return modalDiv;
 }
+
 
 /*==========================================================================
     The code blocks in the below are related to line chart
@@ -415,6 +451,7 @@ function buildLineChartGraphGroup(modal, margin, id) {
  * This method draw the line in the line chart
  */
 function buildLineChartLine(graphGroup, graphHeight, countryStudentValues, xScale, yScale, clazz) {
+
   const linePath = graphGroup
     .append("path")
     .datum(countryStudentValues)
@@ -431,12 +468,11 @@ function buildLineChartLine(graphGroup, graphHeight, countryStudentValues, xScal
           return yScale(d.count);
         })
     )
-    // .style("opacity", 0)
     .on("mouseover", function () {
-      d3.select(this).attr("stroke-width", 3);
+      d3.select(this).style("opacity", 4);
     })
     .on("mouseout", function () {
-      d3.select(this).attr("stroke-width", 1.5);
+      d3.select(this).style("opacity", 0.6);
     });
 
   const pathLength = linePath.node().getTotalLength();
@@ -483,14 +519,6 @@ function updateLineChartPath(lineChartPath, xScale, yScale, updatedData) {
     }
   }, 1)
 
-}
-
-function buildLineChartTooltipDiv() {
-  return d3
-    .select("body")
-    .append("div")
-    .attr("class", "lineTooltip")
-    .style("opacity", 0);
 }
 
 /*
@@ -542,17 +570,12 @@ function createLineChartDots(graphGroup, lineDiv, graphHeight, countryStudentVal
   dots
     .transition()
     .duration(3000)
-    .style("opacity", 0.4)
-    .attr("cx", function (d) {
-      return xScale(d.year);
-    })
-    .attr("cy", function (d) {
-      return yScale(d.count);
-    })
+    .style("opacity", 0.4);
 
   return dots;
 }
 
+//Update line chart dots for the secondary line
 function updateLineChartDots(dots, xScale, yScale, updatedData, lineDiv, country) {
   if (updatedData) {
     dots
@@ -578,6 +601,7 @@ function updateLineChartDots(dots, xScale, yScale, updatedData, lineDiv, country
           .style("top", event.pageY - 28 + "px");
       });
   }
+
   dots
     .transition()
     .duration(1000)
@@ -589,6 +613,7 @@ function updateLineChartDots(dots, xScale, yScale, updatedData, lineDiv, country
     });
 }
 
+//line chart x-scale
 function getXScale(dataSetY, graphWidth) {
   return d3
     .scaleTime()
@@ -596,6 +621,7 @@ function getXScale(dataSetY, graphWidth) {
     .range([0, graphWidth]);
 }
 
+//line chart y-scale
 function getYScale(yMax, graphHeight) {
   return d3
     .scaleLinear()
@@ -645,45 +671,53 @@ function dropdownOnChangeActions(dropdown, dataSetY, yMax, secondaryGraphGroup, 
     const secondSelectedCountryStudentValues = secondSelectedCountryDetails.values
 
     if (!secondaryGraphGroup) {
+      //append group for second line
       secondaryGraphGroup = buildLineChartGraphGroup(modal, margin, 'secondary');
     }
 
+    //get data for the second country
     secondSelectedCountryStudentValues.forEach(function (d) {
       secondaryDataSetY.push(d.year);
       secondaryYMax.push(d.count);
     });
 
+    //get x scale for second country data
     xScale = getXScale(secondaryDataSetY, graphWidth);
+
+    //get y scale for second country data
     yScale = getYScale(secondaryYMax, graphHeight);
+
+    //secondary line chart building for the initial state (no country selected from drop down)
     if (!secondaryLineChartPath) {
       secondaryLineChartPath = buildLineChartLine(secondaryGraphGroup, graphHeight, secondSelectedCountryStudentValues, xScale, yScale, 'secondary');
       secondaryLineChartDots = createLineChartDots(secondaryGraphGroup, lineTooltipDiv, graphHeight, secondSelectedCountryStudentValues, xScale, yScale, secondSelectedCountry);
     } else {
+
+    //secondary line path update (when change country in the dropdown)
       updateLineChartPath(secondaryLineChartPath, xScale, yScale, secondSelectedCountryStudentValues);
       updateLineChartDots(secondaryLineChartDots, xScale, yScale, secondSelectedCountryStudentValues, lineTooltipDiv, secondSelectedCountry);
     }
   } else {
+    
+  //this code block runs when selected option is "select" change back to original state
     if (secondaryGraphGroup) {
-      const duration = 500
+      const duration = 500;
       secondaryGraphGroup
         .transition()
         .duration(duration)
         .style("opacity", 0)
         .remove();
-      secondaryGraphGroup = undefined
+      secondaryGraphGroup = undefined;
       if (secondaryLineChartPath) {
         const pathLength = secondaryLineChartPath.node().getTotalLength();
         secondaryLineChartPath
           .transition()
           .duration(duration)
           .attr("stroke-dashoffset", pathLength)
-          .remove()
-        secondaryLineChartPath = undefined
-        secondaryLineChartDots
-          .transition()
-          .duration(duration)
-          .remove()
-        secondaryLineChartDots = undefined
+          .remove();
+        secondaryLineChartPath = undefined;
+        secondaryLineChartDots.transition().duration(duration).remove();
+        secondaryLineChartDots = undefined;
       }
     }
 
@@ -694,12 +728,13 @@ function dropdownOnChangeActions(dropdown, dataSetY, yMax, secondaryGraphGroup, 
   updateLineChartAxes(axes, graphHeight, xScale, yScale);
   updateLineChartPath(linePath, xScale, yScale);
   updateLineChartDots(dots, xScale, yScale);
+ 
   return {
     xScale,
     yScale,
     secondaryGraphGroup,
     secondaryLineChartPath,
-    secondaryLineChartDots
+    secondaryLineChartDots,
   };
 }
 
@@ -763,10 +798,8 @@ function buildLineChart(selectedCountry, modalDiv, event) {
 
     const primaryGraphGroup = buildLineChartGraphGroup(modalSVG, margin, 'primary');
 
-    //****BUILD THE AXES****
+    //build the axes
     const axes = buildLineChartAxes(primaryGraphGroup, graphHeight, xScale, yScale);
-
-    const colourScale = d3.scaleOrdinal(d3.schemeCategory10);
 
     modalDiv
       .transition()
@@ -777,7 +810,11 @@ function buildLineChart(selectedCountry, modalDiv, event) {
       .style("top", modalPositionY + "px");
 
     //Build line chart tooltip div
-    const lineTooltipDiv = buildLineChartTooltipDiv();
+    const lineTooltipDiv = d3
+    .select("body")
+    .append("div")
+    .attr("class", "lineTooltip")
+    .style("opacity", 0);
 
     //Build line in the line chart
     const linePath = buildLineChartLine(primaryGraphGroup, graphHeight, countryStudentValues, xScale, yScale, 'primary');
@@ -785,11 +822,11 @@ function buildLineChart(selectedCountry, modalDiv, event) {
     // add the dots with tooltips
     const dots = createLineChartDots(primaryGraphGroup, lineTooltipDiv, graphHeight, countryStudentValues, xScale, yScale, country);
 
-
     let secondaryGraphGroup;
     let secondaryLineChartPath;
     let secondaryLineChartDots;
 
+    //dropdown change
     dropdown.on("change", function () {
       const res = dropdownOnChangeActions(dropdown, dataSetY, yMax, secondaryGraphGroup, modalSVG, margin, xScale, graphWidth, yScale, graphHeight, secondaryLineChartPath, secondaryLineChartDots, lineTooltipDiv, axes, linePath, dots);
       xScale = res.xScale;

@@ -1,7 +1,7 @@
 #map-container {
   width: 90vw;
   height: 90vh;
-  margin-left: 70px;
+  margin-left: 90px;
 }
 
 .country-on {
@@ -53,7 +53,7 @@ div.modal {
 }
 
 .modalLabel {
-  font: 8px sans-serif;
+  font: 14px sans-serif;
   padding-right: 7px;
   color: rgb(8, 7, 6);
 }

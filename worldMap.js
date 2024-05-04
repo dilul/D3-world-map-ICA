@@ -14,13 +14,15 @@
   Colour scheme source: https://github.com/d3/d3-scale-chromatic
 */
 
+
+//define the max width and height to adjust for the window size
 const maxWidth = window.innerWidth * 0.85 - 175;
 const maxHeight = window.innerHeight * 0.9;
 const ratio = 0.5;
 
+
 let w = maxWidth;
 let h = maxWidth * ratio;
-
 if (h > maxHeight) {
   h = maxHeight;
   w = h / ratio;
@@ -30,8 +32,10 @@ if (h > maxHeight) {
 const modalWidth = w * 0.55;
 const modalHeight = modalWidth * 0.8;
 
-let modalPositionX = w / 2;
-let modalPositionY = h / 2;
+const initialModalPositionX = (w / 2) + 100;
+const initialModalPositionY = (h / 2) + 25;
+let modalPositionY = initialModalPositionY;
+let modalPositionX =initialModalPositionX;
 
 const studentData = new Map();
 const colourScaleData = new Map();
@@ -148,11 +152,7 @@ function buildChoroplethMap() {
 
           const countryData = getCountryStudentDataFromMap(d);
           const countryName = getId(countryData?.country || d.properties.name);
-          // if (!countryData) {
-          //   const colour = colorScale('No data');
-          //   const colourCountries = colourScaleData.get(colour) || [];
-          //   colourScaleData.set(colour, [...colourCountries, countryName]);
-          // }
+       
           return "country" + countryName;
         })
         .attr("fill", function (d) {
@@ -164,7 +164,7 @@ function buildChoroplethMap() {
           // if (d.properties.name === 'Canada') {
           //   return "#8c0287"
           // }
-          return countryData?.colour || colorScale('No data');
+          return countryData?.colour || colorScale(0);
         })
         .on("mouseover", function (event, d) {
           const bbox = this.getBBox();
@@ -262,6 +262,7 @@ function buildChoroplethMap() {
 
           if (selectedColourScale !== d) {
             selectedColourScale = d;
+
             const mappedCountries = colourScaleData.get(colorScale(d)) || [];
             for (const country of mappedCountries) {
               try {
@@ -289,10 +290,12 @@ function buildChoroplethMap() {
         .attr("x", 50)
         .attr("y", 9)
         .attr("dy", ".35em")
+        .style("font-size","14px")
         .text(function (d, i) {
           if (i === colourDomainLength - 1) {
             // No data point
-            return d;
+            console.log(d)
+            return `${d} - 99` ;
           } else if (i === 0) {
             // upper limit
             return `${d} Upward`
@@ -747,7 +750,7 @@ function dropdownOnChangeActions(dropdown, dataSetY, yMax, secondaryGraphGroup, 
 function buildLineChart(selectedCountry, modalDiv, event) {
 
   //Check whether the selected Country data is available
-  if (selectedCountry) {
+  if (selectedCountry && selectedCountry.total!=0) {
     const dataSetY = [];
     const yMax = [];
 
@@ -756,8 +759,8 @@ function buildLineChart(selectedCountry, modalDiv, event) {
       graphWidth = modalWidth - margin.left - margin.right,
       graphHeight = modalHeight - margin.top - margin.bottom;
 
-    modalPositionX = w / 2 - modalWidth / 2;
-    modalPositionY = h / 2 - modalHeight / 2;
+    modalPositionX = initialModalPositionX - modalWidth / 2;
+    modalPositionY = initialModalPositionY - modalHeight / 2;
 
     const country = selectedCountry.country;
     const countryStudentValues = selectedCountry.values;
@@ -782,7 +785,7 @@ function buildLineChart(selectedCountry, modalDiv, event) {
 
     //Append instruction text
     dropdownContainer.append("text")
-      .style("font-size", 14).attr("class", "modalLabel").text("Please select a country to compare");
+      .attr("class", "modalLabel").text("Please select a country to compare");
 
     //Append drop down with country names to the modal
     const dropdown = countryDropDown(dropdownContainer, countries);
@@ -844,8 +847,8 @@ function buildLineChart(selectedCountry, modalDiv, event) {
     modalDiv.append("div").append("h5").html("Data is not available");
     const modalDivRect = modalDiv.node().getBoundingClientRect();
 
-    modalPositionX = w / 2 - modalDivRect.width / 2;
-    modalPositionY = h / 2 - modalDivRect.height / 2;
+    modalPositionX = initialModalPositionX - modalDivRect.width / 2;
+    modalPositionY = initialModalPositionY - modalDivRect.height / 2;
   }
 
   modalPositionX = modalPositionX < 0 ? 10 : modalPositionX;

@@ -35,7 +35,7 @@ const modalHeight = modalWidth * 0.8;
 const initialModalPositionX = (w / 2) + 100;
 const initialModalPositionY = (h / 2) + 25;
 let modalPositionY = initialModalPositionY;
-let modalPositionX =initialModalPositionX;
+let modalPositionX = initialModalPositionX;
 
 const studentData = new Map();
 const colourScaleData = new Map();
@@ -43,7 +43,10 @@ const colourScaleData = new Map();
 //define the student count intervals
 const colourDomain = [0, 100, 1000, 5000, 10000, 15000, 25000, 50000, 75000, 100000]
 //define colour range for data intervals
-const colourRange = ["#FFFFFF","#FFFFFF","#ffffcc",
+const colourRange = [
+  "#FFFFFF",
+  "#FFFFFF",
+  "#ffffcc",
   "#ffeda0",
   "#fed976",
   "#feb24c",
@@ -51,7 +54,8 @@ const colourRange = ["#FFFFFF","#FFFFFF","#ffffcc",
   "#fc4e2a",
   "#e31a1c",
   "#bd0026",
-  "#800026"]
+  "#800026"
+]
 
 const colorScale = d3
   .scaleThreshold()
@@ -119,7 +123,7 @@ function buildChoroplethMap() {
         .attr("width", contRect.width)
         .attr("height", maxHeight);
 
-      
+
       const mapTooltip = d3
         .select("body")
         .append("div")
@@ -152,7 +156,7 @@ function buildChoroplethMap() {
 
           const countryData = getCountryStudentDataFromMap(d);
           const countryName = getId(countryData?.country || d.properties.name);
-       
+
           return "country" + countryName;
         })
         .attr("fill", function (d) {
@@ -245,7 +249,7 @@ function buildChoroplethMap() {
           return id;
         })
         .on("click", function (event, d) {
-          
+
           //get the opacity of the selected colour
           const opacity = selectedColourScale === d ? 1 : 0.2;
           const legendOpacity = selectedColourScale === d ? 1 : 0.4;
@@ -701,7 +705,7 @@ function dropdownOnChangeActions(dropdown, dataSetY, yMax, secondaryGraphGroup, 
       updateLineChartDots(secondaryLineChartDots, xScale, yScale, secondSelectedCountryStudentValues, lineTooltipDiv, secondSelectedCountry);
     }
   } else {
-    
+
   //this code block runs when selected option is "select" change back to original state
     if (secondaryGraphGroup) {
       const duration = 500;
@@ -731,7 +735,7 @@ function dropdownOnChangeActions(dropdown, dataSetY, yMax, secondaryGraphGroup, 
   updateLineChartAxes(axes, graphHeight, xScale, yScale);
   updateLineChartPath(linePath, xScale, yScale);
   updateLineChartDots(dots, xScale, yScale);
- 
+
   return {
     xScale,
     yScale,
@@ -804,14 +808,6 @@ function buildLineChart(selectedCountry, modalDiv, event) {
     //build the axes
     const axes = buildLineChartAxes(primaryGraphGroup, graphHeight, xScale, yScale);
 
-    modalDiv
-      .transition()
-      .duration(200)
-      .style("opacity", 0.96)
-      .style("visibility", "visible")
-      .style("left", modalPositionX + "px")
-      .style("top", modalPositionY + "px");
-
     //Build line chart tooltip div
     const lineTooltipDiv = d3
     .select("body")
@@ -853,6 +849,14 @@ function buildLineChart(selectedCountry, modalDiv, event) {
 
   modalPositionX = modalPositionX < 0 ? 10 : modalPositionX;
   modalPositionY = modalPositionY < 0 ? 10 : modalPositionY;
+
+  modalDiv
+    .transition()
+    .duration(200)
+    .style("opacity", 0.96)
+    .style("visibility", "visible")
+    .style("left", modalPositionX + "px")
+    .style("top", modalPositionY + "px");
 }
 
 /*
